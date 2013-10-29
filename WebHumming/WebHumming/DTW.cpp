@@ -73,14 +73,10 @@ int MyMinTwoInt(int a, int b)
 
 double MyDistance(double &a, double &b)
 {
-
 	double D=0;
-
-		//D+=pow(a[i]-b[i],2);
 	D+=abs(a-b);
 
 	return D;
-	//return sqrt(D);
 }
 
 double PitchDistance(vector<vector<double>> &a, vector<vector<double>> &b)
@@ -104,9 +100,7 @@ double PitchDistance(vector<vector<double>> &a, vector<vector<double>> &b)
 		}
 		D+=disPitch;
 	}
-	//D/=m;
 	return D;
-	//return sqrt(D);
 }
 
 
@@ -172,23 +166,13 @@ void ZeroToForwardThreshold(vector< vector<double> > &x , int BeginFrame)
 	int vec=0;
 	int Threshold=0;//判决什么时候开始唱
 
-
-
-	/*ofstream outf("datail.txt",ofstream::app);
-	for (i=0;i<m;i++)
-	{
-		outf<<i<<":"<<x[i][0]<<" ";
-	}
-	outf<<endl;*/
 	vector <vector <double>>::iterator iter=x.begin();
 	for (i=0;i<BeginFrame;i++)
 	{
-		
 		x.erase(iter);
 		iter=x.begin();
-			
-
 	}
+
 	m=x.size();
 	if	(m>0)
 	{
@@ -202,25 +186,12 @@ void ZeroToForwardThreshold(vector< vector<double> > &x , int BeginFrame)
 	{
 		
 		x[i].erase(x[i].begin());
-		/*int numZero=0;
-		for (j=i;j<i+12 && j<m-6;j++)
-		{
-			if (x[j+1][0] ==0)
-			{
-				numZero++;
-			}
-		}*/
-		/*if (numZero<6 && x[i+1][0] !=0 )
-		{
-			Threshold=1;
-		}*/
-		if (x[i+1][0] !=0/* && x[i+2][0] !=0*/ )
+		if (x[i+1][0] !=0)
 		{
 			Threshold=1;
 		}
-
-
 	}
+
 	iter=x.begin();
 	for (;iter!=x.end();)
 	{
@@ -231,7 +202,6 @@ void ZeroToForwardThreshold(vector< vector<double> > &x , int BeginFrame)
 		}
 		else
 			iter++;
-
 	}
 	m=x.size();
 
@@ -252,7 +222,7 @@ void ZeroToForwardThreshold(vector< vector<double> > &x , int BeginFrame)
 }
 
 
-void ZeroToForwardThresholdAndLongZero(vector< vector<double> > &x , int BeginFrame)////去除中间以及结尾的静音部分
+void ZeroToForwardThresholdAndLongZero(vector< vector<double> > &x , int BeginFrame)	//去除中间以及结尾的静音部分
 {
 	double mean=0;
 	int m=x.size();
@@ -282,24 +252,10 @@ void ZeroToForwardThresholdAndLongZero(vector< vector<double> > &x , int BeginFr
 	{
 
 		x[i].erase(x[i].begin());
-		/*int numZero=0;
-		for (j=i;j<i+12 && j<m-6;j++)
-		{
-		if (x[j+1][0] ==0)
-		{
-		numZero++;
-		}
-		}*/
-		/*if (numZero<6 && x[i+1][0] !=0 )
-		{
-		Threshold=1;
-		}*/
-		if (x[i+1][0] !=0/* && x[i+2][0] !=0*/ )
+		if (x[i+1][0] !=0)
 		{
 			Threshold=1;
 		}
-
-
 	}
 	iter=x.begin();
 	for (;iter!=x.end();)
@@ -348,12 +304,6 @@ void ZeroToForwardThresholdAndLongZero(vector< vector<double> > &x , int BeginFr
 			{
 				
 				ExistSilence=TRUE;
-				//for (j=ZeroBegin;j<m-1 && (x[j][0] ==0 || x[j+1][0] ==0);j++)
-				/*for (j=ZeroBegin;j<m-1 && x[j][0] ==0 ;j++)
-				{
-
-					x[j].erase(x[j].begin());
-				}*/
 				for (j=ZeroBegin;j<m-1 && x[j][0] ==0 && j<ZeroBegin+ZeroSequenceNum-15;j++)//只删除15个静音
 				{
 
@@ -418,8 +368,6 @@ void ZeroToForwardThresholdAndLongZeroToHalfBefor( vector<float>  &x , int Begin
 
 		x.erase(iter);
 		iter=x.begin();
-
-
 	}
 	m=x.size();
 	if	(m>0)
@@ -436,8 +384,6 @@ void ZeroToForwardThresholdAndLongZeroToHalfBefor( vector<float>  &x , int Begin
 		{
 			Threshold=1;
 		}
-
-
 	}
 	iter=x.begin();
 	for (;iter!=x.end();)
@@ -508,10 +454,8 @@ void ZeroToForwardThresholdAndLongZeroToHalfBefor( vector<float>  &x , int Begin
 					}
 					else
 						iter++;
-
 				}
 			}
-
 		}
 	}
 	ZeroSequenceNum=0;
@@ -570,63 +514,6 @@ void ZeroToForwardThresholdAndLongZeroToHalfBefor( vector<float>  &x , int Begin
 	ExistSilence=FALSE;
 	NoSilence=FALSE;
 
-	//while (!NoSilence)//去除结尾的静音部分（如果连续大于10帧）
-	//{
-	//	m=x.size();
-	//	ExistSilence=FALSE;
-	//	for (i=0;i<m-1 && ExistSilence==FALSE;i++)
-	//	{
-	//		if (i==m-2)
-	//		{
-	//			NoSilence=TRUE;
-	//		}
-	//		if (x[i][0] ==0 /*|| x[i+1][0] ==0*/)
-	//		{
-	//			if (LastZero+1==i)//如果上一次是零
-	//			{
-	//				LastZero=i;
-	//				ZeroSequenceNum++;
-	//			}
-	//			else//如果上次不是零，则更改序号，并且ZeroSequenceNum归零
-	//			{
-	//				LastZero=i;
-	//				ZeroBegin=i;//从这里开始是静音
-	//				ZeroSequenceNum=0;
-	//			}
-	//		}
-	//		if (ZeroSequenceNum>10)
-	//		{
-
-	//			ExistSilence=TRUE;
-	//			//for (j=ZeroBegin;j<m-1 && (x[j][0] ==0 || x[j+1][0] ==0);j++)
-	//			for (j=ZeroBegin;j<m-1 && x[j][0] ==0 && j<ZeroBegin+ZeroSequenceNum-6;j++)//只删除6个静音
-	//			{
-
-	//				x[j].erase(x[j].begin());
-	//			}
-	//			LastZero=-10;
-	//			ZeroBegin=-10;
-	//			ZeroSequenceNum=0;
-	//		}
-	//		if (ExistSilence==TRUE)
-	//		{
-	//			iter=x.begin();
-	//			for (;iter!=x.end();)
-	//			{
-	//				if (iter->empty())
-	//				{
-	//					x.erase(iter);
-	//					iter=x.begin();
-	//				}
-	//				else
-	//					iter++;
-
-	//			}
-	//		}
-
-	//	}
-	//}
-
 	m=x.size();
 
 	for (i=1;i<m;i++)
@@ -671,8 +558,6 @@ void ZeroToForward(vector< vector<double> > &x )
 		{
 			Threshold=1;
 		}
-
-
 	}
 	vector <vector <double>>::iterator iter=x.begin();
 	for (;iter!=x.end();)
@@ -686,14 +571,6 @@ void ZeroToForward(vector< vector<double> > &x )
 			iter++;
 
 	}
-	/*vector <vector <double>>::iterator iter=x.begin();
-	for (;iter!=x.begin()+BeginFrame;)
-	{
-
-		x.erase(iter);
-
-
-	}*/
 	m=x.size();
 
 	for (i=1;i<m;i++)
@@ -739,10 +616,6 @@ void MeanTowToOne(vector< vector<double> > &x)
 				;
 			}
 		}
-		//if (x[i].empty())
-		//{
-		//	x.erase(x.begin()+i);
-		//}
 	}  //均值部分
 	for (i=0;i<n;i++)
 	{
@@ -752,8 +625,6 @@ void MeanTowToOne(vector< vector<double> > &x)
 			x[j-1][i]=0;
 		}
 	}
-	//NoZero(x);
-	//smooth(x);
 }
 
 
@@ -837,24 +708,6 @@ void MeanInt(vector< vector<double> > &x)
 	int Nozero=0;
 	int vec=0;
 	int i,j;
-	//for (i=10;i<m-10;i++)
-	//{
-	//	for (j=0;j<n;j++)
-	//	{
-	//		if(x[i][j]!=0)
-	//		{			
-	//			vec=1;
-	//		}
-	//	}
-	//	if (vec==1)
-	//	{
-	//		Nozero++;
-	//	}
-	//	vec=0;
-	//}
-	//ofstream outf("datail.txt",ofstream::app);
-	//double variance;
-	//vector<double> XVariance;
 	vector<double> XMean;
 	for (i=0;i<n;i++)
 	{
@@ -872,8 +725,6 @@ void MeanInt(vector< vector<double> > &x)
 			if(x[i][j]!=0)
 			{			
 				x[i][j]-=XMean[j];
-				//cout<<i<<","<<x[i][j]<<" ";
-				//outf<<i<<","<<x[i][j]<<" ";
 				if (x[i][j]>10)
 				{
 					x[i][j]=x[i][j]-12;
@@ -899,7 +750,6 @@ void MeanInt(vector< vector<double> > &x)
 				}
 				
 				cout<<i<<","<<x[i][j]<<" ";
-				//outf<<i<<","<<x[i][j]<<" ";
 			}
 		}
 	}  //均值部分
@@ -934,11 +784,7 @@ float MeanPlus( vector<float>  &x, float plus)
 		}
 	}  //均值部分
 	return mean;
-
 }
-
-
-
 
 float Mean( vector<float>  &x)
 {
@@ -967,9 +813,7 @@ float Mean( vector<float>  &x)
 		}
 	}  //均值部分
 	return mean;
-
 }
-
 
 
 float Mean( vector<float>::iterator  Ybegin,  vector<float>::iterator  Yend)
@@ -999,7 +843,6 @@ float Mean( vector<float>::iterator  Ybegin,  vector<float>::iterator  Yend)
 		}
 	}  //均值部分
 	return mean;
-
 }
 
 
@@ -1029,9 +872,7 @@ void Mean( float  *x ,int length)
 			}
 		}
 	}  //均值部分
-
 }
-
 
 
 void MeanFirst(vector< vector<double> > &x)
@@ -1046,24 +887,6 @@ void MeanFirst(vector< vector<double> > &x)
 	int Nozero=0;
 	int vec=0;
 	int i,j;
-	//for (i=8;i<m-8;i++)
-	//{
-	//	for (j=0;j<n;j++)
-	//	{
-	//		if(x[i][j]!=0)
-	//		{			
-	//			vec=1;
-	//		}
-	//	}
-	//	if (vec==1)
-	//	{
-	//		Nozero++;
-	//	}
-	//	vec=0;
-	//}
-	//ofstream outf("datail.txt",ofstream::app);
-	//double variance;
-	//vector<double> XVariance;
 	vector<double> XMean;
 	for (i=0;i<n;i++)
 	{
@@ -1074,11 +897,6 @@ void MeanFirst(vector< vector<double> > &x)
 		}
 		XMean.push_back(mean);
 	}
-	//if ((double)Nozero/(double)m<0.4)
-	//{
-	//	ZeroToForward(x);
-
-	//}
 	for (i=0;i<m;i++)
 	{
 		for (j=0;j<n;j++)
@@ -1086,8 +904,6 @@ void MeanFirst(vector< vector<double> > &x)
 			if(x[i][j]!=0)
 			{			
 				x[i][j]-=XMean[j];
-				//cout<<i<<","<<x[i][j]<<" ";
-				//outf<<i<<","<<x[i][j]<<" ";
 				if (x[i][j]>10)
 				{
 					x[i][j]=x[i][j]-12;
@@ -1099,11 +915,7 @@ void MeanFirst(vector< vector<double> > &x)
 			}
 		}
 	}  //均值部分
-
 }
-
-
-
 
 void MeanBefor8AndAfter8(vector< vector<double> > &x)
 {
@@ -1113,24 +925,7 @@ void MeanBefor8AndAfter8(vector< vector<double> > &x)
 	int Nozero=0;
 	int vec=0;
 	int i,j;
-	//for (i=8;i<m-8;i++)
-	//{
-	//	for (j=0;j<n;j++)
-	//	{
-	//		if(x[i][j]!=0)
-	//		{			
-	//			vec=1;
-	//		}
-	//	}
-	//	if (vec==1)
-	//	{
-	//		Nozero++;
-	//	}
-	//	vec=0;
-	//}
-	//ofstream outf("datail.txt",ofstream::app);
-	//double variance;
-	//vector<double> XVariance;
+
 	vector<double> XMean;
 	for (i=0;i<n;i++)
 	{
@@ -1140,11 +935,6 @@ void MeanBefor8AndAfter8(vector< vector<double> > &x)
 		}
 		XMean.push_back(mean);
 	}
-	//if ((double)Nozero/(double)m<0.4)
-	//{
-	//	ZeroToForward(x);
-
-	//}
 	for (i=0;i<m;i++)
 	{
 		for (j=0;j<x[0].size();j++)
@@ -1183,8 +973,6 @@ void MeanDimentionLSH(vector<float> &x)
 	}
 }
 
-
-
 void Dimention20LSHToToneInteger(vector<double> &x)
 {
 	int m=x.size();
@@ -1218,8 +1006,6 @@ void MeanOld(vector< vector<double> > &x)
 		}
 		vec=0;
 	}
-	//double variance;
-	//vector<double> XVariance;
 	vector<double> XMean;
 	for (i=0;i<n;i++)
 	{
@@ -1376,13 +1162,8 @@ void Mean8MinutesInt(vector< vector<double> > &x)
 			if(x[i][j]!=0)
 			{			
 				x[i][j]-=XMean[j];
-				//cout<<i<<":"<<x[i][j]<<"  ";
 			}
 		}
-		//if (x[i].empty())
-		//{
-		//	x.erase(x.begin()+i);
-		//}
 	}  //均值部分
 }
 
@@ -1445,10 +1226,6 @@ void Mean8MinutesVar(vector< vector<double> > &x)
 				x[i][j]-=XMean[j];
 			}
 		}
-		//if (x[i].empty())
-		//{
-		//	x.erase(x.begin()+i);
-		//}
 	}  //均值部分
 	for (i=0;i<n;i++)
 	{
@@ -1484,13 +1261,6 @@ int DistanceMatrix(vector< vector<double> > &queryX, vector< vector<double> > &d
 			//D[i][j]=MyDistance(queryX[i],dataY[j]);
 		}
 	}
-
-	//vector<vector<double>> D(m,vector<double>(n));
-	/*for (j=0;j<n-m/2;j++)
-	{
-	D[0][j]=MyDistance(x[0],y[j]);
-	}*/
-
 	return 0;
 }
 
@@ -1525,7 +1295,6 @@ double DTW(vector<vector<double>> &D)
 	}
 	vector<double>::iterator disIter;
 	disIter=min_element(DL.begin(),DL.end());
-	//stable_sort(DL.begin(),DL.end());
 	return *disIter;
 }
 double DTWtotalOrig(vector<vector<double>> &D)
@@ -1535,8 +1304,6 @@ double DTWtotalOrig(vector<vector<double>> &D)
 	m=D.size();
 	n=D[0].size();
 
-	//D[1][1]+=D[0][0];
-	//D[2][1]+=D[0][0]+penalty;
 	for (j=1;j<m;j++)
 	{
 		D[j][0]+=D[j-1][0];
@@ -1554,7 +1321,6 @@ double DTWtotalOrig(vector<vector<double>> &D)
 	}
 	vector<double>::iterator disIter;
 	disIter=min_element(DL.begin(),DL.end());
-	//stable_sort(DL.begin(),DL.end());
 	return *disIter;
 }
 
@@ -1565,8 +1331,6 @@ double DTWtotalFive(vector<vector<double>> &D)
 	m=D.size();
 	n=D[0].size();
 
-	//D[1][1]+=D[0][0];
-	//D[2][1]+=D[0][0]+penalty;
 	for (j=1;j<m;j++)
 	{
 		D[j][0]+=D[j-1][0];
@@ -1593,7 +1357,6 @@ double DTWtotalFive(vector<vector<double>> &D)
 	}
 	vector<double>::iterator disIter;
 	disIter=min_element(DL.begin(),DL.end());
-	//stable_sort(DL.begin(),DL.end());
 	return *disIter;
 }
 
@@ -1604,16 +1367,10 @@ double DTWtotal(vector<vector<double>> &D)
 	m=D.size();
 	n=D[0].size();
 
-	//D[1][1]+=D[0][0];
-	//D[2][1]+=D[0][0]+penalty;
 	for (j=2;j<m;j++)
 	{
 		D[j][0]=inf;
 	}
-	//for (j=1;j<m;j++)
-	//{
-	//	D[j][0]+=D[j-1][0];
-	//}
 	D[1][1]=MyMin(D[1][0]+penalty,D[0][0],D[0][1]+penalty);
 	for (j=2;j<m;j++)
 	{
@@ -1636,10 +1393,10 @@ double DTWtotal(vector<vector<double>> &D)
 	}
 	vector<double>::iterator disIter;
 	disIter=min_element(DL.begin(),DL.end());
-	//stable_sort(DL.begin(),DL.end());
 	return *disIter;
 }
-//
+
+
 double DTWBeginQueryAndSongSevenNo(vector< vector<double> > &queryX, vector< vector<double> > &dataY,vector< vector<double> > &D)
 {
 	double distanceM1;
@@ -1762,57 +1519,17 @@ double DTWdisRecur(vector< vector<double> > &queryX, vector< vector<double> > &d
 	else
 		return distanceMin;
 }
+
 double DTWBeginQueryAndSongSeven(vector< vector<double> > &queryX, vector< vector<double> > &dataY,vector< vector<double> > &D)
 {
 	double distanceMin;
 	int m=queryX.size();
 	int n=queryX[0].size();
 	int i,j;
-	//vector<vector<double>>query(m,vector<double>(n,0));
 	DistanceMatrix(queryX,dataY,D);
 	distanceMin=DTWBeginNew(D);
 	return DTWdisRecur(queryX,dataY,D,distanceMin,1,1);//这里参数是1和1表示仅仅上下平移一次
-	//return distanceMin;
 }
-
-//
-//double DTWBeginRecurseLinear(vector< vector<double> > &queryX, vector< vector<double> > &dataY,vector< vector<double> > &D)
-//{
-//	double distanceMin;
-//	int m=queryX.size();
-//	int n=queryX[0].size();
-//	int i,j;
-//	int l=dataY.size();
-//	double stretch=0.75;
-//	double distanceM;
-//	vector <double> distanceStretch;
-//	map <double,double>disMapLinear;
-//	for (;stretch<1.3;)
-//	{
-//		vector<vector<double>> queryStretch;
-//		StringToString(queryX,queryStretch,stretch);
-//		distanceM=StringMatch(queryStretch,dataY);
-//		stretch+=0.05;
-//		disMapLinear.insert(make_pair(distanceM,stretch));
-//		distanceStretch.push_back(distanceM);
-//	}
-//	stable_sort(distanceStretch.begin(),distanceStretch.end());
-//	distanceM=distanceStretch[0];
-//	if (disMapLinear.count(distanceM))
-//	{
-//		stretch=disMapLinear[distanceM];
-//	}
-//	vector< vector<double> > queryNew;
-//	StringToString(queryX,queryNew,stretch);
-//	//vector<vector<double>>query(m,vector<double>(n,0));
-//	int x=queryNew.size();
-//	int y=dataY.size();
-//	vector<vector<double>> matrixD(x,vector<double>(y));
-//	DistanceMatrix(queryNew,dataY,matrixD);
-//	distanceMin=DTWBeginNew(matrixD);
-//	return DTWdisRecur(queryNew,dataY,matrixD,distanceMin,1,1);
-//	//return distanceMin;
-//}
 
 double DTWBeginNew(vector<vector<double>> &D)
 {
@@ -1821,8 +1538,6 @@ double DTWBeginNew(vector<vector<double>> &D)
 	m=D.size();
 	n=D[0].size();
 
-	//D[1][1]+=D[0][0];
-	//D[2][1]+=D[0][0]+penalty;
 	for (j=1;j<m;j++)
 	{
 		D[j][0]=inf;
@@ -1831,10 +1546,6 @@ double DTWBeginNew(vector<vector<double>> &D)
 	{
 		D[0][j]=0;
 	}
-	//for (j=1;j<m;j++)
-	//{
-	//	D[j][0]+=D[j-1][0];
-	//}
 	D[1][1]=MyMin(D[1][0]+penalty,D[0][0],D[0][1]+penalty)+MyMinTwo(D[1][1],disConst);
 	for (j=2;j<m;j++)
 	{
@@ -1857,15 +1568,8 @@ double DTWBeginNew(vector<vector<double>> &D)
 	}
 	vector<double>::iterator disIter;
 	disIter=min_element(DL.begin(),DL.end());
-	//stable_sort(DL.begin(),DL.end());
 	return *disIter;
 }
-
-
-
-
-
-
 
 double DTWBeginNewLSH(vector<vector<double>> &D)//用的是归一化的距离
 {
@@ -1874,8 +1578,6 @@ double DTWBeginNewLSH(vector<vector<double>> &D)//用的是归一化的距离
 	m=D.size();
 	n=D[0].size();
 
-	//D[1][1]+=D[0][0];
-	//D[2][1]+=D[0][0]+penalty;
 	for (j=1;j<m;j++)
 	{
 		D[j][0]=inf;
@@ -1884,10 +1586,6 @@ double DTWBeginNewLSH(vector<vector<double>> &D)//用的是归一化的距离
 	{
 		D[0][j]=inf;
 	}
-	//for (j=1;j<m;j++)
-	//{
-	//	D[j][0]+=D[j-1][0];
-	//}
 	D[1][1]=MyMin(D[1][0]+penalty,D[0][0],D[0][1]+penalty)+MyMinTwo(D[1][1],disConst);
 	for (j=2;j<m;j++)
 	{
@@ -1910,8 +1608,6 @@ double DTWBeginNewLSH(vector<vector<double>> &D)//用的是归一化的距离
 	}
 	vector<double>::iterator disIter;
 	disIter=min_element(DL.begin(),DL.end());
-	//stable_sort(DL.begin(),DL.end());
-	//return *disIter;
 	if	(n>m+1)
 	{
 		return D[m-1][n-1]/m;
@@ -1929,8 +1625,6 @@ double DTWBeginAndRA(vector<vector<double>> &D)
 	m=D.size();
 	n=D[0].size();
 
-	//D[1][1]+=D[0][0];
-	//D[2][1]+=D[0][0]+penalty;
 	for (j=1;j<m;j++)
 	{
 		D[j][0]=inf;
@@ -1939,10 +1633,6 @@ double DTWBeginAndRA(vector<vector<double>> &D)
 	{
 		D[0][j]=inf;
 	}
-	//for (j=1;j<m;j++)
-	//{
-	//	D[j][0]+=D[j-1][0];
-	//}
 	D[1][1]=MyMin(D[1][0]+penalty,D[0][0],D[0][1]+penalty)+MyMinTwo(D[1][1],disConst);
 	for (j=2;j<m;j++)
 	{
@@ -1959,18 +1649,8 @@ double DTWBeginAndRA(vector<vector<double>> &D)
 			D[i][j]=MyMin(D[i-1][j-1],D[i-1][j-2]+penalty,D[i-2][j-1]+penalty)-Dpenalty+MyMinTwo(D[i][j],disConst);
 		}
 	}
-	
-	//if	(n>m+1)
-	//{
-	//	return D[m-1][n-1]/m;
-	//}
 	return D[m-1][n-1];//仅仅返回最后那个
 }
-
-
-
-
-
 
 
 double DTWBeginThreeOld(vector<vector<double>> &D)
@@ -1980,8 +1660,6 @@ double DTWBeginThreeOld(vector<vector<double>> &D)
 	m=D.size();
 	n=D[0].size();
 
-	//D[1][1]+=D[0][0];
-	//D[2][1]+=D[0][0]+penalty;
 	for (j=2;j<m;j++)
 	{
 		D[j][0]=inf;
@@ -1990,10 +1668,6 @@ double DTWBeginThreeOld(vector<vector<double>> &D)
 	{
 		D[0][j]=inf;
 	}
-	//for (j=1;j<m;j++)
-	//{
-	//	D[j][0]+=D[j-1][0];
-	//}
 	D[1][1]=MyMin(D[1][0]+penalty,D[0][0],D[0][1]+penalty);
 	for (j=2;j<m;j++)
 	{
@@ -2016,7 +1690,6 @@ double DTWBeginThreeOld(vector<vector<double>> &D)
 	}
 	vector<double>::iterator disIter;
 	disIter=min_element(DL.begin(),DL.end());
-	//stable_sort(DL.begin(),DL.end());
 	return *disIter;
 }
 
@@ -2028,8 +1701,6 @@ double DTWtotalPlusPe(vector<vector<double>> &D)
 	m=D.size();
 	n=D[0].size();
 
-	//D[1][1]+=D[0][0];
-	//D[2][1]+=D[0][0]+penalty;
 	for (j=1;j<m;j++)
 	{
 		D[j][0]+=D[j-1][0];
@@ -2056,9 +1727,9 @@ double DTWtotalPlusPe(vector<vector<double>> &D)
 	}
 	vector<double>::iterator disIter;
 	disIter=min_element(DL.begin(),DL.end());
-	//stable_sort(DL.begin(),DL.end());
 	return *disIter;
 }
+
 double DTWbegin(vector<vector<double>> &D)
 {
 	int i,j,m,n;
@@ -2066,8 +1737,6 @@ double DTWbegin(vector<vector<double>> &D)
 	m=D.size();
 	n=D[0].size();
 
-	//D[1][1]+=D[0][0];
-	//D[2][1]+=D[0][0]+penalty;
 	for (j=1;j<m;j++)
 	{
 		D[j][0]+=D[j-1][0];
@@ -2085,9 +1754,9 @@ double DTWbegin(vector<vector<double>> &D)
 	}
 	vector<double>::iterator disIter;
 	disIter=min_element(DL.begin(),DL.end());
-	//stable_sort(DL.begin(),DL.end());
 	return *disIter;
 }
+
 int PitchToTone(vector <vector <double>> &queryPitch)
 {
 	int n=queryPitch.size();
@@ -2097,23 +1766,16 @@ int PitchToTone(vector <vector <double>> &queryPitch)
 	{
 		if (queryPitch[i][0]!=0)
 		{
-		
-		pitchnum=queryPitch[i][0];
-		//pitchnum=pitchnum*k*1000/sam;
-		pitchnum=k*1000/pitchnum;
-		pitchnum=69+12*log(pitchnum/440)/log(2.0);
-		cout<<i<<","<<pitchnum<<" ";
-		queryPitch[i][0]=pitchnum;
+			pitchnum=queryPitch[i][0];
+			pitchnum=k*1000/pitchnum;
+			pitchnum=69+12*log(pitchnum/440)/log(2.0);
+			cout<<i<<","<<pitchnum<<" ";
+			queryPitch[i][0]=pitchnum;
 		}
-		//else
-		//{
-		//	vector<vector<double>>::iterator iter=queryPitch.begin();
-		//	queryPitch.erase(iter+i);
-		//}
 	}
 	return 0;
-
 }
+
 int realPitchToToneShengda(vector <float> &queryPitch)
 {
 	int n=queryPitch.size();
@@ -2125,26 +1787,18 @@ int realPitchToToneShengda(vector <float> &queryPitch)
 		{
 
 			pitchnum=queryPitch[i];
-			//pitchnum=pitchnum*k*1000/sam;
-			//pitchnum=69+12*log(pitchnum/440)/log(2.0);
             pitchnum=(12.0f*(pitchnum-log(440.0f)/log(2.0f))+69.0f);
 			queryPitch[i]=pitchnum;
 		}
 	}
 	return 0;
-
-
 }
-
-
 
 int realPitchToTone(vector <float> &queryPitch)
 {
 	int n=queryPitch.size();
 	float pitchnum=0;
-	//int k=FREQ,sam=win;
 	static int numpitchall=0;
-	//ofstream outf("datail.txt"/*,ofstream::app*/);
 	for (int i=0;i!=n;i++)
 	{
 		if (queryPitch[i]!=0)
@@ -2155,19 +1809,14 @@ int realPitchToTone(vector <float> &queryPitch)
 			queryPitch[i]=pitchnum;
 		}
 	}
-	//outf<<"over"<<endl<<numpitchall<<endl<<endl<<endl<<endl<<endl<<endl;
 	return 0;
-
 }
-
 
 int realPitchToThreeTone(vector <vector <double>> &queryPitch,vector <vector <double>> &queryPitchTow,vector <vector <double>> &queryPitchThree)
 {
 	int n=queryPitch.size();
 	double pitchnum=0;
-	//int k=FREQ,sam=win;
 	static int numpitchall=0;
-	//ofstream outf("datail.txt"/*,ofstream::app*/);
 	for (int i=0;i!=n;i++)
 	{
 		queryPitchTow.push_back(queryPitch[i]);
@@ -2176,10 +1825,7 @@ int realPitchToThreeTone(vector <vector <double>> &queryPitch,vector <vector <do
 		{
 
 			pitchnum=queryPitch[i][0];
-			//pitchnum=pitchnum*k*1000/sam;
 			pitchnum=69+12*log(pitchnum/440)/log(2.0);
-			//cout<<i<<","<<pitchnum<<" ";
-			//outf<<pitchnum<<endl;
 			int pitch=queryPitch[i][0];
 			if ((pitch >=82.4) && (pitch <=1046.5))
 			{
@@ -2190,21 +1836,14 @@ int realPitchToThreeTone(vector <vector <double>> &queryPitch,vector <vector <do
 			queryPitch[i][0]=pitchnum;
 		}
 	}
-	//outf<<"over"<<endl<<numpitchall<<endl<<endl<<endl<<endl<<endl<<endl;
 	return 0;
-
 }
-
-
-
 
 int realPitchToAnotherTowTone(vector <vector <double>> &queryPitch,vector <vector <double>> &queryPitchTow,vector <vector <double>> &queryPitchThree)
 {
 	int n=queryPitch.size();
 	double pitchnum=0;
-	//int k=FREQ,sam=win;
 	static int numpitchall=0;
-	//ofstream outf("datail.txt"/*,ofstream::app*/);
 	for (int i=0;i!=n;i++)
 	{
 		queryPitchTow.push_back(queryPitch[i]);
@@ -2213,11 +1852,7 @@ int realPitchToAnotherTowTone(vector <vector <double>> &queryPitch,vector <vecto
 		{
 
 			pitchnum=queryPitch[i][0];
-			//pitchnum=pitchnum*k*1000/sam;
-			//pitchnum=69+12*log(pitchnum/440)/log(2.0);
 			pitchnum=440*pow(2.0,(pitchnum-69)/12);//还原为原始基频
-			//cout<<i<<","<<pitchnum<<" ";
-			//outf<<pitchnum<<endl;
 			int pitch=queryPitch[i][0];
 			if ((pitch >=82.4) && (pitch <=1046.5))
 			{
@@ -2227,51 +1862,31 @@ int realPitchToAnotherTowTone(vector <vector <double>> &queryPitch,vector <vecto
 			queryPitchThree[i][0]=69+12*log(pitchnum/1.2/440)/log(2.0);//减半
 		}
 	}
-	//outf<<"over"<<endl<<numpitchall<<endl<<endl<<endl<<endl<<endl<<endl;
 	return 0;
-
 }
-
-
-
-
 
 
 int ToneTorealPitch(vector <vector <double>> &queryPitch)
 {
 	int n=queryPitch.size();
 	double pitchnum=0;
-	//int k=FREQ,sam=win;
 	static int numpitchall=0;
-	//ofstream outf("c://humming//datail.txt"/*,ofstream::app*/);
 	for (int i=0;i!=n;i++)
 	{
 		if (queryPitch[i][0]!=0)
 		{
 
 			pitchnum=queryPitch[i][0];
-			//pitchnum=pitchnum*k*1000/sam;
-			//pitchnum=69+12*log(pitchnum/440)/log(2.0);
 			pitchnum=pow(2.0,(pitchnum-69)/12)*440;
-			//cout<<i<<","<<pitchnum<<" ";
-			//outf<<pitchnum<<endl;
 			queryPitch[i][0]=pitchnum;
 		}
-		//else
-		//{
-		//	vector<vector<double>>::iterator iter=queryPitch.begin();
-		//	queryPitch.erase(iter+i);
-		//}
 	}
-	//outf<<"over"<<endl<<numpitchall<<endl<<endl<<endl<<endl<<endl<<endl;
 	return 0;
-
 }
 
 void readinstance(char *wavename,vector <vector <double>> &queryPitch)
 {
 	ifstream indexFile(wavename);
-	//map<string , vector<vector<double>>> indexSongName;
 	vector <double> pitchNum;
 	string songPitchNum;
 	while (indexFile>>songPitchNum)
@@ -2282,9 +1897,8 @@ void readinstance(char *wavename,vector <vector <double>> &queryPitch)
 
 	}
 	indexFile.close();
-
-
 }
+
 void discre(vector <vector <double>> &x)
 {
 	double mean=0;
@@ -2307,7 +1921,6 @@ void discre(vector <vector <double>> &x)
 	{
 		x[m-1][i]=0;
 	}
-
 }
 
 
@@ -2330,16 +1943,15 @@ void Zerodiscre(vector <vector <double>> &x)
 			{
 				x[i-1][j]=0;
 			}
-
 		}
-
 	}
 	for (i=0;i<n;i++)
 	{
 		x[m-1][i]=0;
 	}
-
 }
+
+
 void StringToString( vector<float>  &queryX,  vector<float>  &dataY,float stretch)
 {
 	int i,j,m,n,k;
@@ -2357,11 +1969,7 @@ void StringToString( vector<float>  &queryX,  vector<float>  &dataY,float stretc
 			dataY.push_back(pitch_query);
 		}
 	}
-
 }
-
-
-
 
 void StringToStringSame( vector<float>  &queryX,  vector<float>  &dataY,float stretch)
 {
@@ -2378,11 +1986,7 @@ void StringToStringSame( vector<float>  &queryX,  vector<float>  &dataY,float st
 			dataY.push_back(queryX[k]);
 		}
 	}
-
 }
-
-
-
 
 float LinearToDis( vector<float>  &queryX,  vector<float>  &dataY)
 {
@@ -2409,20 +2013,11 @@ float LinearToDis( vector<float>  &queryX,  vector<float>  &dataY)
 		   }
 	   }
 	   Dis=StringMatch(queryStretchX,dataY);
-	   //Dis=PitchDistance(queryStretchX,dataY);
-	  // Dis=StringMatch(queryStretchX,dataY);
 	   return Dis;
 	}
 	else
 		return 0;
-	
-	//dataY.push_back(queryX[m-1]);
-
 }
-
-
-
-
 
 
 float CalculateOptimalEdge( vector<float>  &queryX,  vector<float>  &dataY,int &left,int &right,int length,float ratio)
@@ -2434,14 +2029,6 @@ float CalculateOptimalEdge( vector<float>  &queryX,  vector<float>  &dataY,int &
 	float bestDis=10000;
 	float Cdis=0;
 	int step=4;
-	/*if (ratio>0.6)
-	{
-		step=3;
-	}*/
-	//else if (ratio>0.7)
-	//{
-	//	step=5;
-	//}
 	vector<float>::iterator  Ybegin=dataY.begin();
 	vector<float>::iterator  Yend=dataY.end();
 	for (int i=0;i< length;i+=step)
@@ -2471,13 +2058,7 @@ float CalculateOptimalEdge( vector<float>  &queryX,  vector<float>  &dataY,int &
 	}
 	Mean(dataY.begin(),dataY.end());
 	return bestDis;
-	
-
 }
-
-
-
-
 
 float LinearToDisIter( vector<float>::iterator  Xbegin,  vector<float>::iterator  Xend,
 					   vector<float>::iterator  Ybegin,  vector<float>::iterator  Yend)
@@ -2492,7 +2073,6 @@ float LinearToDisIter( vector<float>::iterator  Xbegin,  vector<float>::iterator
 		float ratio=0;
 		float Dis=0;
 		int numY=0;
-		//vector<float>  queryStretchX;
 		int totalm=(m-1)*stretch;
 		for (i=0;i<totalm;i++)
 		{
@@ -2517,12 +2097,7 @@ float LinearToDisIter( vector<float>::iterator  Xbegin,  vector<float>::iterator
 	}
 	else
 		return 0;
-
-	//dataY.push_back(queryX[m-1]);
-
 }
-
-
 
 
 double LinearToDisUltimate(vector< vector<double> > &queryX, vector< vector<double> > &dataY,int &ultimateNum)
@@ -2552,15 +2127,10 @@ double LinearToDisUltimate(vector< vector<double> > &queryX, vector< vector<doub
 			}
 		}
 		Dis=StringMatchUltimate(queryStretchX,dataY,ultimateNum);
-		//Dis=PitchDistance(queryStretchX,dataY);
-		// Dis=StringMatch(queryStretchX,dataY);
 		return Dis;
 	}
 	else
 		return 0;
-
-	//dataY.push_back(queryX[m-1]);
-
 }
 
 
@@ -2578,7 +2148,6 @@ void StringToStringNoMean(vector< vector<double> > &queryX, vector< vector<doubl
 			dataY.push_back(queryX[k]);
 		}
 	}
-
 }
 
 float StringMatch( vector<float>  &queryX,  vector<float>  &dataY)
@@ -2592,13 +2161,11 @@ float StringMatch( vector<float>  &queryX,  vector<float>  &dataY)
 	{
 		dis+=MyMinTwo(abs(queryX[i]-dataY[i]),disConstString);
 	}
-	//dis=dis*dis;
 	if(num!=0)
 	{
 		dis/=num;
 	}
 	return dis;
-
 }
 
 
@@ -2613,17 +2180,9 @@ double StringMatchUltimate(vector< vector<double> > &queryX, vector< vector<doub
 	{
 		//dis+=MyMinTwo(MyDistance(queryX[i],dataY[i]),disConstString);
 	}
-	//dis=dis*dis;
 	ultimateNum+=num;
-	//if(num!=0)
-	//{
-	//	dis/=num;
-	//}
 	return dis;
-
 }
-
-
 
 double StringMatchToDis(vector< vector<double> > &queryX, vector< vector<double> > &dataY)
 {
@@ -2634,19 +2193,13 @@ double StringMatchToDis(vector< vector<double> > &queryX, vector< vector<double>
 	for (;stretch<1.3;)
 	{
 		vector<vector<double>> queryStretch;
-		//StringToString(queryX,queryStretch,stretch);
-		//distanceM=StringMatch(queryStretch,dataY);
 		stretch+=0.05;
 		distanceStretch.push_back(distanceM);
 	}
 	stable_sort(distanceStretch.begin(),distanceStretch.end());
 	distanceM=distanceStretch[0];
 	return distanceM;
-
 }
-
-
-
 
 
 double StringMatchToDisMapRALSHNewPairVariancePositionVariance( vector<float>  &queryX,  vector<float>  &dataY,
@@ -2656,19 +2209,8 @@ double StringMatchToDisMapRALSHNewPairVariancePositionVariance( vector<float>  &
 	int sizeX=queryX.size();
 	int sizeY=dataY.size();
 	int MidPos=sizeX/2;
-	//int BeginMatchPos;
-	//if (recurse>1)
-	//{
-	//	BeginMatchPos=sizeX/3;
-	//}
-	//else
-	//	BeginMatchPos=sizeX/3;
 	int BeginMatchPos=sizeX*MidPercentage*1/3;
-	//int BeginMatchPos=sizeX*MidPercentage/4;
-	//int pairNum=15;//表示位置对应所试的次数
 	double MovePoints=(sizeX-BeginMatchPos*2)/(double)pairNum;
-	//printf("sizeX%d ",sizeX);
-	//printf("MovePoints%f ",MovePoints);
 	if (MovePoints<1)
 	{
 		MovePoints=1;
@@ -2685,23 +2227,17 @@ double StringMatchToDisMapRALSHNewPairVariancePositionVariance( vector<float>  &
 		return distanceM;
 	}
 	vector<float> DataY_L(dataY.begin(),dataY.begin()+MidDataYSize);
-	//Mean(DataY_L);
 	vector<float>  DataY_R(dataY.begin()+MidDataYSize,dataY.end());
-	//Mean(DataY_R);
 
 	for (i=0;i<=pairNum;i++)
 	{
 		vector<float>  queryX_L(queryX.begin(),queryX.begin()+BeginMatchPos+i*MovePoints);
 		vector<float>  queryX_R(queryX.begin()+BeginMatchPos+i*MovePoints,queryX.end());
-		//Mean(queryX_L);
-		//Mean(queryX_R);
+
 		distanceM=LinearToDis(queryX_L,DataY_L)+LinearToDis(queryX_R,DataY_R);
 		disMap.insert(make_pair(distanceM,i));
 		distanceStretch.push_back(distanceM);
-		//if (0==MovePoints)
-		//{
-		//	i+=pairNum;
-		//}
+
 		if (queryX.begin()+BeginMatchPos+i*MovePoints==queryX.end()-2)
 		{
 			i+=pairNum;
@@ -2711,33 +2247,16 @@ double StringMatchToDisMapRALSHNewPairVariancePositionVariance( vector<float>  &
 	distanceM=distanceStretch[0];
 	if (recurse==0)
 	{
-		//if (disMap.count(distanceM))
-		//{
-		//	MinDisPos=disMap[distanceM];
-		//	vector< vector<double> > queryX_L(queryX.begin(),queryX.begin()+BeginMatchPos+MinDisPos*MovePoints);
-		//	vector< vector<double> > queryX_R(queryX.begin()+BeginMatchPos+MinDisPos*MovePoints,queryX.end());
-		//	distanceM=LinearToDisUltimate(queryX_L,DataY_L,ultimateNum)+
-		//		LinearToDisUltimate(queryX_R,DataY_R,ultimateNum);
-		//	//if	(recurse=3)
-		//	//{
-		//	//	distanceM=distanceM/sizeX;
-		//	//}
-		//	return distanceM;
-		//}
 		ultimateNum+=2;
-
 		return distanceM;
-
 	}
 	else
 	{
-
 		if (disMap.count(distanceM))
 		{
 			MinDisPos=disMap[distanceM];
 			recurse--;
 			MidPercentage=MidPercentage*1.1;
-			//MidPercentage=MidPercentage*1;
 			pairNum=pairNum-2;
 			if (pairNum<3)
 			{
@@ -2747,26 +2266,12 @@ double StringMatchToDisMapRALSHNewPairVariancePositionVariance( vector<float>  &
 			vector<float>  queryX_R(queryX.begin()+BeginMatchPos+MinDisPos*MovePoints,queryX.end());
 			distanceM=StringMatchToDisMapRALSHNewPairVariancePositionVariance(queryX_L,DataY_L,recurse,pairNum,MidPercentage,ultimateNum)+
 				StringMatchToDisMapRALSHNewPairVariancePositionVariance(queryX_R,DataY_R,recurse,pairNum,MidPercentage,ultimateNum);
-			//if	(recurse=3)
-			//{
-			//	distanceM=distanceM/sizeX;
-			//}
+
 			return distanceM;
 		}
-
 	}
 	return distanceM;
-
-
-
-
 }
-
-
-
-
-
-
 
 float RAPositionVarianceOptimal( vector<float>  &queryX,  vector<float>  &dataY,
 															   int recurse,int pairNum,float MidPercentage,int &ultimateNum)
@@ -2775,19 +2280,8 @@ float RAPositionVarianceOptimal( vector<float>  &queryX,  vector<float>  &dataY,
 	int sizeX=queryX.size();
 	int sizeY=dataY.size();
 	int MidPos=sizeX/2;
-	//int BeginMatchPos;
-	//if (recurse>1)
-	//{
-	//	BeginMatchPos=sizeX/3;
-	//}
-	//else
-	//	BeginMatchPos=sizeX/3;
 	int BeginMatchPos=sizeX*MidPercentage*1/3;
-	//int BeginMatchPos=sizeX*MidPercentage/4;
-	//int pairNum=15;//表示位置对应所试的次数
 	float MovePoints=(sizeX-BeginMatchPos*2)/(double)pairNum;
-	//printf("sizeX%d ",sizeX);
-	//printf("MovePoints%f ",MovePoints);
 	if (MovePoints<1)
 	{
 		MovePoints=1;
@@ -2804,9 +2298,7 @@ float RAPositionVarianceOptimal( vector<float>  &queryX,  vector<float>  &dataY,
 		return distanceM;
 	}
 	vector<float> DataY_L(dataY.begin(),dataY.begin()+MidDataYSize);
-	//Mean(DataY_L);
 	vector<float>  DataY_R(dataY.begin()+MidDataYSize,dataY.end());
-	//Mean(DataY_R);
 
 	for (i=0;i<=pairNum;i++)
 	{
@@ -2814,10 +2306,6 @@ float RAPositionVarianceOptimal( vector<float>  &queryX,  vector<float>  &dataY,
 			LinearToDisIter(dataY.begin()+MidDataYSize,dataY.end(),queryX.begin()+BeginMatchPos+i*MovePoints,queryX.end());
 		disMap.insert(make_pair(distanceM,i));
 		distanceStretch.push_back(distanceM);
-		//if (0==MovePoints)
-		//{
-		//	i+=pairNum;
-		//}
 		if (queryX.begin()+BeginMatchPos+i*MovePoints==queryX.end()-2)
 		{
 			i+=pairNum;
@@ -2827,23 +2315,8 @@ float RAPositionVarianceOptimal( vector<float>  &queryX,  vector<float>  &dataY,
 	distanceM=distanceStretch[0];
 	if (recurse==0)
 	{
-		//if (disMap.count(distanceM))
-		//{
-		//	MinDisPos=disMap[distanceM];
-		//	vector< vector<double> > queryX_L(queryX.begin(),queryX.begin()+BeginMatchPos+MinDisPos*MovePoints);
-		//	vector< vector<double> > queryX_R(queryX.begin()+BeginMatchPos+MinDisPos*MovePoints,queryX.end());
-		//	distanceM=LinearToDisUltimate(queryX_L,DataY_L,ultimateNum)+
-		//		LinearToDisUltimate(queryX_R,DataY_R,ultimateNum);
-		//	//if	(recurse=3)
-		//	//{
-		//	//	distanceM=distanceM/sizeX;
-		//	//}
-		//	return distanceM;
-		//}
 		ultimateNum+=2;
-
 		return distanceM;
-
 	}
 	else
 	{
@@ -2853,7 +2326,6 @@ float RAPositionVarianceOptimal( vector<float>  &queryX,  vector<float>  &dataY,
 			MinDisPos=disMap[distanceM];
 			recurse--;
 			MidPercentage=MidPercentage*1.1;
-			//MidPercentage=MidPercentage*1;
 			pairNum=pairNum-2;
 			if (pairNum<3)
 			{
@@ -2863,21 +2335,11 @@ float RAPositionVarianceOptimal( vector<float>  &queryX,  vector<float>  &dataY,
 			vector<float>  queryX_R(queryX.begin()+BeginMatchPos+MinDisPos*MovePoints,queryX.end());
 			distanceM=RAPositionVarianceOptimal(queryX_L,DataY_L,recurse,pairNum,MidPercentage,ultimateNum)+
 				RAPositionVarianceOptimal(queryX_R,DataY_R,recurse,pairNum,MidPercentage,ultimateNum);
-			//if	(recurse=3)
-			//{
-			//	distanceM=distanceM/sizeX;
-			//}
 			return distanceM;
 		}
-
 	}
 	return distanceM;
-
-
-
-
 }
-
 
 void StringTosignature(vector<float>  &dataY,  signature_t  &Y)
 {
@@ -2895,8 +2357,6 @@ void StringTosignature(vector<float>  &dataY,  signature_t  &Y)
 	if (num<(MAX_SIG_SIZE-1))
 	{
 		Y.n=num;
-
-		
 	}
 	else
 		Y.n=MAX_SIG_SIZE-1;
@@ -2962,8 +2422,6 @@ vector<pair<int,int>> DuplicateSegmentBegin(vector<float> &tone)	//从音符序列ton
 }
 
 
-
-
 void OneFileToMultiFile(string fileName,int ThreadNum)
 {
 	ifstream wavList(fileName.c_str());
@@ -2988,11 +2446,7 @@ void OneFileToMultiFile(string fileName,int ThreadNum)
 		fileSplit.close();
 	}
 	wavList.close();
-
 }
-
-
-
 
 
 void MultiFileDel(string fileName,int ThreadNum)
@@ -3136,11 +2590,6 @@ int WavToSongFive (char *wavename,map<string , vector<float>> &indexSongName,PRN
 	}
 	ofstream shengdaTimes("wav.result",ofstream::app);//LSH时间
 	shengdaTimes<<"盛大提取次数："<<shengdaPitch<< endl;
-	//if (shengdaPitch%300==0 || shengdaPitch>352)
-	//{
-	//	cout<<"盛大提取次数："<<shengdaPitch<< endl;
-	//}
-	
 	shengdaTimes.close();
 
 	if(NULL!=pFeaBuf){
@@ -3154,19 +2603,14 @@ int WavToSongFive (char *wavename,map<string , vector<float>> &indexSongName,PRN
 
 	if (reNum==10)
 	{
-		
-		
 		string enhanceS("SpeechEnhance.exe ");
 		string pitchname(wavename);
 		string::size_type enditer=0;
-		//beginiter=nameSong.rfind("\");
 		enditer=pitchname.rfind(".wav");
 		string nameSong;
-		//nameSong.assign(pitchname,enditer-5,9);
 		nameSong.assign(pitchname,enditer-5,9);
 		char buffer[30];
-		
-		//WaitForSingleObject(hMutex,INFINITE);
+
 		enhance++;
 		string num=(itoa(enhance,buffer,10));
 		nameSong=num+nameSong;
@@ -3177,7 +2621,6 @@ int WavToSongFive (char *wavename,map<string , vector<float>> &indexSongName,PRN
 		char filename[300];
 		strcpy(filename,nameSong.c_str());
 		string cmd=enhanceS+pitchname+" "+filename+" "+"2";
-		//ReleaseMutex(hMutex);
 		system(cmd.c_str());
 		reNum=SMelodyFeatureExtraction(filename,pFeaBuf,nFeaLen,QueryNotes,nNoteLen,0.3);
 		cmd="del ";
@@ -3265,22 +2708,15 @@ int WavToSongFive (char *wavename,map<string , vector<float>> &indexSongName,PRN
 		query.Weights=NULL;
 	}
 	signature_t candiY;
-	//candiY.Features=NULL;
-	//candiY.Weights=NULL;
 
 	candiY.Features=(feature_t *) malloc((MAX_SIG_SIZE-1)*sizeof(feature_t));
 	candiY.Weights=(float *) malloc((MAX_SIG_SIZE-1)*sizeof(float));
 	
-
-
-	
-	//QueryPitchToLSHVector(queryPitch,LSHQueryVector);
 	float FloorLevelInitial=0.6;//初始值
 	float FloorLevel=FloorLevelInitial;
 	float UpperLimit=1.7;
 	float StretchStep=0.1; //步长其实一直是0.05
 	int MatchBeginPos=6;//代表query和dataY相差点数必须在这个1/MatchBeginPos范围之内才进行匹配
-	//IntT RetainNum=3;//每个点仅保留3个点
 	static int CandidatesDTWAll=0;
 	float ratioAll=2.6;
 	static int filter0ne=0;
@@ -3292,7 +2728,6 @@ int WavToSongFive (char *wavename,map<string , vector<float>> &indexSongName,PRN
 	vector <float >tempDis3;
 	for (int recur=0;recur<3;recur++)
 	{
-
 		if (recur==0)
 		{
 			filter0ne++;
@@ -3334,9 +2769,6 @@ int WavToSongFive (char *wavename,map<string , vector<float>> &indexSongName,PRN
 				FloorLevel, UpperLimit,stepFactor,stepRatio, StretchStep);
 		}
 
-
-		//QueryPitchToLSHVectorLinearStretchingShortToMoreNote(posPair,queryPitchNote,LSHQueryVectorLinearStretchingNote, 
-		//	FloorLevel, UpperLimit,stepFactor,stepRatio, StretchStep);
 		QueryPitchToLSHVectorLinearStretchingShortToMore(queryPitch,LSHQueryVectorLinearStretching, 
 			FloorLevel, UpperLimit,stepFactor,stepRatio, StretchStep,recur); //query线性伸缩转为20维
 		//取消音符的LSH需要修改三个地方
@@ -3361,454 +2793,396 @@ int WavToSongFive (char *wavename,map<string , vector<float>> &indexSongName,PRN
 		}
 		else 
 			edge=6;
-if (/*0*/recur!=1) //此为音符的检索
-{
-		//下面为音符的LSH搜索
-#if 1
 
-
-		LinearCoe=0;
-		PPointT *QueriesArray=NULL;//要free
-		if (LSHQueryVectorLinearStretchingNote[LinearCoe].size()>0)
+		if (recur!=1) //此为音符的检索
 		{
-			QueriesArray=readDataSetFromVector(LSHQueryVectorLinearStretchingNote[LinearCoe]);
-			Int32T nPointsQuery=LSHQueryVectorLinearStretchingNote[LinearCoe].size();
-			IntT dimension=6;
-			if (nPointsQuery>0)
+			//下面为音符的LSH搜索
+#if 1
+			LinearCoe=0;
+			PPointT *QueriesArray=NULL;//要free
+			if (LSHQueryVectorLinearStretchingNote[LinearCoe].size()>0)
 			{
-				dimension=LSHQueryVectorLinearStretchingNote[LinearCoe][0].size();
-			}
-			IntT LSHFilterReturnNum=0;
-			IntT *IndexArray=NULL;
-			int IndexArraySize=1000000;//最大查找候选数目
-			IndexArray=(IntT *)MALLOC(IndexArraySize *sizeof(IntT));
-			double *IndexArrayDis=(double *)MALLOC(IndexArraySize *sizeof(double));
-			IntT *IndexFilterArray=NULL;
-			IndexFilterArray=(IntT *)MALLOC(IndexArraySize/2 *sizeof(IntT));
-			IntT * NumArray=(IntT *)MALLOC(nPointsQuery *sizeof(IntT));//每个点返回的数目
-			IntT ResultSize=LSHStructToResultOnePointRetainSeveral(QueriesArray,nPointsQuery,IndexArraySize, 
-				IndexArray,IndexHumingNote,NumArray,RetainNumNote , dimension,LSHFilterNumNote,IndexFilterArray,LSHFilterReturnNum,IndexArrayDis);//得到结果，每个点返回RetainNum个候选
-			vector<IntT> IndexCandidates;
-			vector <float> DisCandidates;
-			vector<IntT> CandidatesNum;//每个点返回的数目存入Vector
-			int curreIndex=0;
-			//for (int i=0;i<ResultSize;i++)
-			//{
-			//	IndexCandidates.push_back(IndexArray[i]);
-			//	DisCandidates.push_back(IndexArrayDis[i]);
-			//}
-			for (int i=0;i<LSHFilterReturnNum;i++)
-			{
-				CandidatesFilter.push_back(IndexFilterArray[i]);
-			}
-			bool insertY=false;
-			for (int i=0;i<nPointsQuery;i++)
-			{
-				int numS=0;
-				int siz=NumArray[i];
-				for (int j=0;j<siz;j++)
+				QueriesArray=readDataSetFromVector(LSHQueryVectorLinearStretchingNote[LinearCoe]);
+				Int32T nPointsQuery=LSHQueryVectorLinearStretchingNote[LinearCoe].size();
+				IntT dimension=6;
+				if (nPointsQuery>0)
 				{
-					if (samePoint.count(IndexArray[j+curreIndex]))
-					{
-						numS=0;
+					dimension=LSHQueryVectorLinearStretchingNote[LinearCoe][0].size();
+				}
+				IntT LSHFilterReturnNum=0;
+				IntT *IndexArray=NULL;
+				int IndexArraySize=1000000;//最大查找候选数目
+				IndexArray=(IntT *)MALLOC(IndexArraySize *sizeof(IntT));
+				double *IndexArrayDis=(double *)MALLOC(IndexArraySize *sizeof(double));
+				IntT *IndexFilterArray=NULL;
+				IndexFilterArray=(IntT *)MALLOC(IndexArraySize/2 *sizeof(IntT));
+				IntT * NumArray=(IntT *)MALLOC(nPointsQuery *sizeof(IntT));//每个点返回的数目
+				IntT ResultSize=LSHStructToResultOnePointRetainSeveral(QueriesArray,nPointsQuery,IndexArraySize, 
+					IndexArray,IndexHumingNote,NumArray,RetainNumNote , dimension,LSHFilterNumNote,IndexFilterArray,LSHFilterReturnNum,IndexArrayDis);//得到结果，每个点返回RetainNum个候选
+				vector<IntT> IndexCandidates;
+				vector <float> DisCandidates;
+				vector<IntT> CandidatesNum;//每个点返回的数目存入Vector
+				int curreIndex=0;
 
-						samePointIte=samePoint.find(IndexArray[j+curreIndex]);
-						numS=samePointIte->second.size();
-						IndexCandidates.push_back(IndexArray[j+curreIndex]);
-						DisCandidates.push_back(IndexArrayDis[j+curreIndex]);
-						for (int k=0;k<samePointIte->second.size();k++)
-						{
-							insertY=true;
-							for (int l=0;l<siz;l++)
-							{
-								if (samePointIte->second[k]==IndexArray[l+curreIndex])
-								{
-									insertY=false;
-
-								}
-
-							}
-							if (insertY==true)
-							{
-								IndexCandidates.push_back(samePointIte->second[k]);
-								DisCandidates.push_back(IndexArrayDis[j+curreIndex]);
-							}
-							else
-								numS--;
-
-						}
-						NumArray[i]+=numS;
-
-					}
-					else
-					{
-						IndexCandidates.push_back(IndexArray[j+curreIndex]);
-						DisCandidates.push_back(IndexArrayDis[j+curreIndex]);
-
-					}
-
+				for (int i=0;i<LSHFilterReturnNum;i++)
+				{
+					CandidatesFilter.push_back(IndexFilterArray[i]);
 				}
 
-				curreIndex+=siz;
-				CandidatesNum.push_back(NumArray[i]);
+				bool insertY=false;
+				for (int i=0;i<nPointsQuery;i++)
+				{
+					int numS=0;
+					int siz=NumArray[i];
+					for (int j=0;j<siz;j++)
+					{
+						if (samePoint.count(IndexArray[j+curreIndex]))
+						{
+							numS=0;
+
+							samePointIte=samePoint.find(IndexArray[j+curreIndex]);
+							numS=samePointIte->second.size();
+							IndexCandidates.push_back(IndexArray[j+curreIndex]);
+							DisCandidates.push_back(IndexArrayDis[j+curreIndex]);
+							for (int k=0;k<samePointIte->second.size();k++)
+							{
+								insertY=true;
+								for (int l=0;l<siz;l++)
+								{
+									if (samePointIte->second[k]==IndexArray[l+curreIndex])
+									{
+										insertY=false;
+									}
+								}
+								if (insertY==true)
+								{
+									IndexCandidates.push_back(samePointIte->second[k]);
+									DisCandidates.push_back(IndexArrayDis[j+curreIndex]);
+								}
+								else
+									numS--;
+
+							}
+							NumArray[i]+=numS;
+
+						}
+						else
+						{
+							IndexCandidates.push_back(IndexArray[j+curreIndex]);
+							DisCandidates.push_back(IndexArrayDis[j+curreIndex]);
+
+						}
+
+					}
+
+					curreIndex+=siz;
+					CandidatesNum.push_back(NumArray[i]);
+				}
+				IndexCandidatesStretch.push_back(IndexCandidates);
+				CandidatesNumStretch.push_back(CandidatesNum);
+				IndexCandidatesDis.push_back(DisCandidates);
+				for (int i=0;i<nPointsQuery;i++)
+				{
+					free(QueriesArray[i]->coordinates);
+					free(QueriesArray[i]);
+				}
+				free(IndexArray);
+				free(IndexFilterArray);
+				free(NumArray);
+				free(QueriesArray);
+				free(IndexArrayDis);
 			}
-			IndexCandidatesStretch.push_back(IndexCandidates);
-			CandidatesNumStretch.push_back(CandidatesNum);
-			IndexCandidatesDis.push_back(DisCandidates);
-			for (int i=0;i<nPointsQuery;i++)
+			else
 			{
-				free(QueriesArray[i]->coordinates);
-				free(QueriesArray[i]);
+				vector <float> DisCandidates;
+				vector<IntT> IndexCandidates;
+				vector<IntT> CandidatesNum;//每个点返回的数目存入Vector
+				IndexCandidatesStretch.push_back(IndexCandidates);
+				CandidatesNumStretch.push_back(CandidatesNum);
+				IndexCandidatesDis.push_back(DisCandidates);
 			}
-			free(IndexArray);
-			free(IndexFilterArray);
-			free(NumArray);
-			free(QueriesArray);
-			free(IndexArrayDis);
-		}
-		else
-		{
-			vector <float> DisCandidates;
-			vector<IntT> IndexCandidates;
-			vector<IntT> CandidatesNum;//每个点返回的数目存入Vector
-			IndexCandidatesStretch.push_back(IndexCandidates);
-			CandidatesNumStretch.push_back(CandidatesNum);
-			IndexCandidatesDis.push_back(DisCandidates);
 
-		}
-
-
-
-		
-
-
-
-		lastTime=clock();
-		OneSongLSHTime=(double)(lastTime-firstTimeTempLSH1)/CLOCKS_PER_SEC;
-		totalLSHOnlyNoteTime+=OneSongLSHTime;
-		OneSongLSHTime=(double)(lastTime-firstTime)/CLOCKS_PER_SEC;
-		totalLSHTime+=OneSongLSHTime;
-		//if (total%500==0 || total >351)
-		//{
-		//	ofstream outTime("wav.result",ofstream::app);//LSH时间
-		//	outTime<<"当前LSH时间："<<OneSongLSHTime<<" 全部歌曲LSH时间："<<totalLSHTime<< endl;
-		//	cout<<"当前LSH时间："<<OneSongLSHTime<<" 全部歌曲LSH时间："<<totalLSHTime<< endl;
-		//	outTime.close();
-		//}
+			lastTime=clock();
+			OneSongLSHTime=(double)(lastTime-firstTimeTempLSH1)/CLOCKS_PER_SEC;
+			totalLSHOnlyNoteTime+=OneSongLSHTime;
+			OneSongLSHTime=(double)(lastTime-firstTime)/CLOCKS_PER_SEC;
+			totalLSHTime+=OneSongLSHTime;
 
 #endif
 
-		//下面为统计LSH准确率
-		FloorLevel=FloorLevelInitial;
-//		LSHresultRate(wavename,queryPitch.size(),stepFactor,FloorLevel,IndexCandidatesStretch,IndexLSH,IndexLSHNote,StretchStep,IndexCandidatesDis);
-		//LSHresult(wavename,queryPitch.size(),stepFactor,FloorLevel,IndexCandidatesStretch,IndexLSH,StretchStep);
+			//下面为统计LSH准确率
+			FloorLevel=FloorLevelInitial;
+			//LSHresultRate(wavename,queryPitch.size(),stepFactor,FloorLevel,IndexCandidatesStretch,IndexLSH,IndexLSHNote,StretchStep,IndexCandidatesDis);
+			//LSHresult(wavename,queryPitch.size(),stepFactor,FloorLevel,IndexCandidatesStretch,IndexLSH,StretchStep);
 
-
-
-
-		//下面为LSH滤波
-		map<string ,int> LSHFilterMap;
-		LSHFilter(wavename,LSHFilterMap,CandidatesFilter,IndexLSH);
-//		LSHresult(wavename,queryPitch.size(),stepFactor,FloorLevel,IndexCandidatesStretch,IndexLSH,StretchStep);
-
+			//下面为LSH滤波
+			map<string ,int> LSHFilterMap;
+			LSHFilter(wavename,LSHFilterMap,CandidatesFilter,IndexLSH);
 
 #if 1
 
-		firstTime=clock();
-
-		//int edge=6;
+			firstTime=clock();
 		
-		for (int q=0;q<qRecurse;q++)
-		{
-
-			int sizeLSH=IndexCandidatesStretch.size();
-			vector<float>  queryStretchPitch;
-			vector< vector<float> >  CandidatesDataY;
-			vector<float>  CandidatesDataYDis;
-			vector <string> SongNameMapToDataY;
-			int CandidatesSizeInDWT=0;//返回的要精确匹配的数目
-			map <string , short > SongMapPosition;
-#if 0  //这里是frame的后处理
-			for	(FloorLevel=FloorLevelInitial,LinearCoe=0;FloorLevel<UpperLimit+StretchStep && LinearCoe<sizeLSH-1 &&LinearCoe< LinearCoeTotal;FloorLevel+=StretchStep,LinearCoe++)
+			for (int q=0;q<qRecurse;q++)
 			{
-				map <string , vector<pair<short, double>> > SongMapPositionAll;
-				//if (FloorLevel>=0.8 || FloorLevel<=1.3)
-				//{
-				//	StretchStep=0.05;
-				//}
-				//else
-				StretchStep=0.1;
-				int StepFactorCurrent=int(stepFactor*stepRatio*FloorLevel/**FloorLevel*/);
 
+				int sizeLSH=IndexCandidatesStretch.size();
+				vector<float>  queryStretchPitch;
+				vector< vector<float> >  CandidatesDataY;
+				vector<float>  CandidatesDataYDis;
+				vector <string> SongNameMapToDataY;
+				int CandidatesSizeInDWT=0;//返回的要精确匹配的数目
+				map <string , short > SongMapPosition;
 
+#if 0  //这里是frame的后处理
 
-
-				if (q==0)
+				for	(FloorLevel=FloorLevelInitial,LinearCoe=0;FloorLevel<UpperLimit+StretchStep && LinearCoe<sizeLSH-1 &&LinearCoe< LinearCoeTotal;FloorLevel+=StretchStep,LinearCoe++)
 				{
-					IndexSignToQueryAndDataVectorHummingMatchLeastALL( IndexCandidatesStretch[LinearCoe],CandidatesNumStretch[LinearCoe],FloorLevel,
-						IndexLSH,StepFactorCurrent,queryPitch,queryStretchPitch,CandidatesDataY,
-						indexSongName,SongNameMapToDataY,CandidatesSizeInDWT,MatchBeginPos,SongMapPosition,
-						SongMapPositionAll,edge,edge*2); //此为全部匹配（不是从头开始唱）
-				}
-				else if (q==3)
-				{
-					IndexSignToQueryAndDataVectorHummingMatchLeastALL( IndexCandidatesStretch[LinearCoe],CandidatesNumStretch[LinearCoe],FloorLevel,
-						IndexLSH,StepFactorCurrent,queryPitch,queryStretchPitch,CandidatesDataY,
-						indexSongName,SongNameMapToDataY,CandidatesSizeInDWT,MatchBeginPos,SongMapPosition,
-						SongMapPositionAll,6,0); //此为全部匹配（不是从头开始唱）
-				}
-				else if (q==4)
-				{
-					IndexSignToQueryAndDataVectorHummingMatchLeastALL( IndexCandidatesStretch[LinearCoe],CandidatesNumStretch[LinearCoe],FloorLevel,
-						IndexLSH,StepFactorCurrent,queryPitch,queryStretchPitch,CandidatesDataY,
-						indexSongName,SongNameMapToDataY,CandidatesSizeInDWT,MatchBeginPos,SongMapPosition,
-						SongMapPositionAll,-6,0); //此为全部匹配（不是从头开始唱）
-				}
-				else if (q==1)
-				{
-					IndexSignToQueryAndDataVectorHummingMatchLeastALL( IndexCandidatesStretch[LinearCoe],CandidatesNumStretch[LinearCoe],FloorLevel,
-						IndexLSH,StepFactorCurrent,queryPitch,queryStretchPitch,CandidatesDataY,
-						indexSongName,SongNameMapToDataY,CandidatesSizeInDWT,MatchBeginPos,SongMapPosition,
-						SongMapPositionAll,4,8); //此为全部匹配（不是从头开始唱）
-				}
-				else if (q==2)
-				{
-					IndexSignToQueryAndDataVectorHummingMatchLeastALL( IndexCandidatesStretch[LinearCoe],CandidatesNumStretch[LinearCoe],FloorLevel,
-						IndexLSH,StepFactorCurrent,queryPitch,queryStretchPitch,CandidatesDataY,
-						indexSongName,SongNameMapToDataY,CandidatesSizeInDWT,MatchBeginPos,SongMapPosition,
-						SongMapPositionAll,-4,-8); //此为全部匹配（不是从头开始唱）
-				}
+					map <string , vector<pair<short, double>> > SongMapPositionAll;
+					StretchStep=0.1;
+					int StepFactorCurrent=int(stepFactor*stepRatio*FloorLevel/**FloorLevel*/);
 
-
-			}
+					if (q==0)
+					{
+						IndexSignToQueryAndDataVectorHummingMatchLeastALL( IndexCandidatesStretch[LinearCoe],CandidatesNumStretch[LinearCoe],FloorLevel,
+							IndexLSH,StepFactorCurrent,queryPitch,queryStretchPitch,CandidatesDataY,
+							indexSongName,SongNameMapToDataY,CandidatesSizeInDWT,MatchBeginPos,SongMapPosition,
+							SongMapPositionAll,edge,edge*2); //此为全部匹配（不是从头开始唱）
+					}
+					else if (q==3)
+					{
+						IndexSignToQueryAndDataVectorHummingMatchLeastALL( IndexCandidatesStretch[LinearCoe],CandidatesNumStretch[LinearCoe],FloorLevel,
+							IndexLSH,StepFactorCurrent,queryPitch,queryStretchPitch,CandidatesDataY,
+							indexSongName,SongNameMapToDataY,CandidatesSizeInDWT,MatchBeginPos,SongMapPosition,
+							SongMapPositionAll,6,0); //此为全部匹配（不是从头开始唱）
+					}
+					else if (q==4)
+					{
+						IndexSignToQueryAndDataVectorHummingMatchLeastALL( IndexCandidatesStretch[LinearCoe],CandidatesNumStretch[LinearCoe],FloorLevel,
+							IndexLSH,StepFactorCurrent,queryPitch,queryStretchPitch,CandidatesDataY,
+							indexSongName,SongNameMapToDataY,CandidatesSizeInDWT,MatchBeginPos,SongMapPosition,
+							SongMapPositionAll,-6,0); //此为全部匹配（不是从头开始唱）
+					}
+					else if (q==1)
+					{
+						IndexSignToQueryAndDataVectorHummingMatchLeastALL( IndexCandidatesStretch[LinearCoe],CandidatesNumStretch[LinearCoe],FloorLevel,
+							IndexLSH,StepFactorCurrent,queryPitch,queryStretchPitch,CandidatesDataY,
+							indexSongName,SongNameMapToDataY,CandidatesSizeInDWT,MatchBeginPos,SongMapPosition,
+							SongMapPositionAll,4,8); //此为全部匹配（不是从头开始唱）
+					}
+					else if (q==2)
+					{
+						IndexSignToQueryAndDataVectorHummingMatchLeastALL( IndexCandidatesStretch[LinearCoe],CandidatesNumStretch[LinearCoe],FloorLevel,
+							IndexLSH,StepFactorCurrent,queryPitch,queryStretchPitch,CandidatesDataY,
+							indexSongName,SongNameMapToDataY,CandidatesSizeInDWT,MatchBeginPos,SongMapPosition,
+							SongMapPositionAll,-4,-8); //此为全部匹配（不是从头开始唱）
+					}
+				}	
 #endif	
+
 #if 1 //这里为音符的扩展
-			sizeLSH=IndexCandidatesStretch.size();
-			map <string , vector<pair<short, double>> > SongMapPositionAll;
-			IndexSignToQueryAndDataVectorHummingMatchLeastALLNote( posPair,IndexCandidatesStretch[sizeLSH-1],CandidatesNumStretch[sizeLSH-1],FloorLevel,
+
+				sizeLSH=IndexCandidatesStretch.size();
+				map <string , vector<pair<short, double>> > SongMapPositionAll;
+				IndexSignToQueryAndDataVectorHummingMatchLeastALLNote( posPair,IndexCandidatesStretch[sizeLSH-1],CandidatesNumStretch[sizeLSH-1],FloorLevel,
 				IndexLSHNote,5,queryPitchNote,queryStretchPitch,CandidatesDataY,
 				indexSongName,SongNameMapToDataY,CandidatesSizeInDWT,MatchBeginPos,SongMapPosition,
 				SongMapPositionAll,edge,edge*2);
 #endif	 
-			lastTime=clock();
-			OneSongLSHTime=(double)(lastTime-firstTimeTempLSH1)/CLOCKS_PER_SEC;
-			totalLSHRetrievalPostProcessPitchTimeNote+=OneSongLSHTime;
-			int sizeCandidates=SongNameMapToDataY.size();
-			Mean(queryPitchNote);
 
-			//static int CandidatesDTWAll=0;
-			//CandidatesDTWAll+=sizeCandidates;
-			Mean(queryStretchPitch);
-			int numLSH=0;
-			int thresholdMatch=0;
+				lastTime=clock();
+				OneSongLSHTime=(double)(lastTime-firstTimeTempLSH1)/CLOCKS_PER_SEC;
+				totalLSHRetrievalPostProcessPitchTimeNote+=OneSongLSHTime;
+				int sizeCandidates=SongNameMapToDataY.size();
+				Mean(queryPitchNote);
+				Mean(queryStretchPitch);
 
-			//vector <string> tempList;
-			//vector <float >tempDis1;
-			//vector <float >tempDis2;
-			//vector <float >tempDis3;
+				int numLSH=0;
+				int thresholdMatch=0;
 
-			firstTimeTemp=clock();
-			vector <pair<float,int>> DisLS;
-			vector <float> DisLSOriginal;
-			for (int i=0;i<sizeCandidates;i++)
-			{
-				if (LSHFilterMap.count(SongNameMapToDataY[i]))
+				firstTimeTemp=clock();
+				vector <pair<float,int>> DisLS;
+				vector <float> DisLSOriginal;
+				for (int i=0;i<sizeCandidates;i++)
+				{
+					if (LSHFilterMap.count(SongNameMapToDataY[i]))
+					{
+						numLSH=LSHFilterMap[SongNameMapToDataY[i]];
+						if (numLSH>thresholdMatch)
+						{
+							Mean(CandidatesDataY[i]);
+							vector <float> candidat;
+							float pitch_query=0;
+							int left=0;
+							int right=0;
+							//int Cedge=edge*(0.7+((float)i)/sizeCandidates);
+							float lsDis=CalculateOptimalEdge(queryStretchPitch,CandidatesDataY[i],left,right,edge*2,((float)i)/sizeCandidates);
+							DisLSOriginal.push_back(lsDis);
+
+							DisLS.push_back(make_pair(lsDis,i)); 
+						}
+					}
+
+				}
+				stable_sort(DisLS.begin(),DisLS.end(),sortRule);
+
+				set<int> LSResult;
+				int LSLeft=DisLS.size()*LSratio;
+				if (LSLeft<20)
+				{
+					LSLeft=DisLS.size();
+				}
+				for (int i=0;i<LSLeft;i++)
+				{
+
+					LSResult.insert(DisLS[i].second);
+
+				}
+				lastTimeTemp=clock();
+				OneSongLSTime=(double)(lastTimeTemp-firstTimeTemp)/CLOCKS_PER_SEC;
+				totalLSTime+=OneSongLSTime;
+				firstTimeTemp=clock();
+				int disEmdNum=-1;
+				lastTimeTemp=clock();
+				OneSongEMDTime=(double)(lastTimeTemp-firstTimeTemp)/CLOCKS_PER_SEC;
+				totalEMDTime+=OneSongEMDTime;
+				firstTimeTemp=clock();
+
+				for (int i=0;i<sizeCandidates;i++)
 				{
 					numLSH=LSHFilterMap[SongNameMapToDataY[i]];
 					if (numLSH>thresholdMatch)
 					{
-						Mean(CandidatesDataY[i]);
-						vector <float> candidat;
-						float pitch_query=0;
-						int left=0;
-						int right=0;
-						//int Cedge=edge*(0.7+((float)i)/sizeCandidates);
-						float lsDis=CalculateOptimalEdge(queryStretchPitch,CandidatesDataY[i],left,right,edge*2,((float)i)/sizeCandidates);
-						DisLSOriginal.push_back(lsDis);
-
-						DisLS.push_back(make_pair(lsDis,i)); 
+						disEmdNum++;
 					}
-				}
 
-			}
-			stable_sort(DisLS.begin(),DisLS.end(),sortRule);
-
-			set<int> LSResult;
-			int LSLeft=DisLS.size()*LSratio;
-			if (LSLeft<20)
-			{
-				LSLeft=DisLS.size();
-			}
-			for (int i=0;i<LSLeft;i++)
-			{
-
-				LSResult.insert(DisLS[i].second);
-
-			}
-			lastTimeTemp=clock();
-			OneSongLSTime=(double)(lastTimeTemp-firstTimeTemp)/CLOCKS_PER_SEC;
-			totalLSTime+=OneSongLSTime;
-			firstTimeTemp=clock();
-			int disEmdNum=-1;
-			lastTimeTemp=clock();
-			OneSongEMDTime=(double)(lastTimeTemp-firstTimeTemp)/CLOCKS_PER_SEC;
-			totalEMDTime+=OneSongEMDTime;
-			firstTimeTemp=clock();
-			for (int i=0;i<sizeCandidates;i++)
-			{
-				numLSH=LSHFilterMap[SongNameMapToDataY[i]];
-				if (numLSH>thresholdMatch)
-				{
-					disEmdNum++;
-				}
-
-				if (query.n==0 || (LSHFilterMap.count(SongNameMapToDataY[i]) && LSResult.count(i)))
-				{
-
-					if (numLSH>thresholdMatch)
+					if (query.n==0 || (LSHFilterMap.count(SongNameMapToDataY[i]) && LSResult.count(i)))
 					{
-						Mean(CandidatesDataY[i]);
-						int QuerySize=queryStretchPitch.size();
-						int DataYSize=CandidatesDataY[i].size();
-						int sizeQandD=CandidatesDataY[i].size();
-						int ultimateNum=0;
-						float distanceM=10000000;
-						float distanceF=10000000;
-						float distanceM1=10000000;
-						float distanceM2=10000000;
-						float distanceM3=10000000;
 
-						if (0/*recur==10*/)
+						if (numLSH>thresholdMatch)
 						{
-							MeanPlus(CandidatesDataY[i],0);
-							distanceM1=RAPositionVarianceOptimal(queryStretchPitch,CandidatesDataY[i],3,5,1,ultimateNum)/ultimateNum;
-						}
-						else
-						{
-							for (int k=0;k<5;k++)
+							Mean(CandidatesDataY[i]);
+							int QuerySize=queryStretchPitch.size();
+							int DataYSize=CandidatesDataY[i].size();
+							int sizeQandD=CandidatesDataY[i].size();
+							int ultimateNum=0;
+							float distanceM=10000000;
+							float distanceF=10000000;
+							float distanceM1=10000000;
+							float distanceM2=10000000;
+							float distanceM3=10000000;
+
+							if (0/*recur==10*/)
+							{
+								MeanPlus(CandidatesDataY[i],0);
+								distanceM1=RAPositionVarianceOptimal(queryStretchPitch,CandidatesDataY[i],3,5,1,ultimateNum)/ultimateNum;
+							}
+							else
+							{
+								for (int k=0;k<5;k++)
+								{
+									ultimateNum=0;
+									float plus=(float(k-2))/2;
+									MeanPlus(CandidatesDataY[i],plus);
+									distanceF=RAPositionVarianceOptimal(queryStretchPitch,CandidatesDataY[i],3,5,1,ultimateNum)/ultimateNum;
+									distanceM1=MyMinTwo(distanceM1,distanceF);
+								}
+							}
+						
+							tempDis1.push_back(distanceM1);
+							for (int k=0;k<0;k++)
 							{
 								ultimateNum=0;
-								float plus=(float(k-2))/2;
+								float plus=(float(k-2.5))/2;
 								MeanPlus(CandidatesDataY[i],plus);
 								distanceF=RAPositionVarianceOptimal(queryStretchPitch,CandidatesDataY[i],3,5,1,ultimateNum)/ultimateNum;
-								distanceM1=MyMinTwo(distanceM1,distanceF);
+								distanceM2=MyMinTwo(distanceM2,distanceF);
 							}
-						}
-						
-						tempDis1.push_back(distanceM1);
-						for (int k=0;k<0;k++)
-						{
+							if (QuerySize<2)
+							{
+								QuerySize=2;
+							}
+							distanceM2=((float)DataYSize)/QuerySize;
+							distanceM2=abs(distanceM2-1);
+							tempDis2.push_back(distanceM2);
 							ultimateNum=0;
-							float plus=(float(k-2.5))/2;
-							MeanPlus(CandidatesDataY[i],plus);
-							distanceF=RAPositionVarianceOptimal(queryStretchPitch,CandidatesDataY[i],3,5,1,ultimateNum)/ultimateNum;
-							distanceM2=MyMinTwo(distanceM2,distanceF);
+							MeanPlus(CandidatesDataY[i],0);
+							
+							distanceM3=((float)DataYSize)/QuerySize;
+							if (distanceM3>1)
+							{
+								distanceM3=distanceM3-1;
+							}
+							else
+								distanceM3=(1-distanceM3)*2;
+							tempDis3.push_back(distanceM3);
+							
+							distanceM=distanceM1*0.8+distanceM2*0.2;
+
+							Dis.push_back(distanceM);
+							string songName=SongNameMapToDataY[i];
+
+							if (songDis.count(distanceM))
+							{
+								*(Dis.end()-1)+=0.00001;
+								songDis.insert(make_pair(distanceM+0.00001,songName)); 
+							}
+							else
+								songDis.insert(make_pair(distanceM,songName)); 
+							songName.erase(0,6);
+							int posSong=songName.rfind("pv");
+							songName.erase(posSong-1,3);
+							tempList.push_back(songName);
 						}
-						if (QuerySize<2)
-						{
-							QuerySize=2;
-						}
-						distanceM2=((float)DataYSize)/QuerySize;
-						distanceM2=abs(distanceM2-1);
-						tempDis2.push_back(distanceM2);
-						ultimateNum=0;
-						MeanPlus(CandidatesDataY[i],0);
-						//distanceM3=RAPositionVarianceOptimal(queryStretchPitch,CandidatesDataY[i],3,5,1,ultimateNum)/ultimateNum;
-
-						distanceM3=((float)DataYSize)/QuerySize;
-						if (distanceM3>1)
-						{
-							distanceM3=distanceM3-1;
-						}
-						else
-							distanceM3=(1-distanceM3)*2;
-						tempDis3.push_back(distanceM3);
-						//distanceM=distanceM1*0.25+distanceM2*0.5+distanceM3*0.25;
-						distanceM=distanceM1*0.8+distanceM2*0.2;
-						//float distanceM=RAPositionVarianceOptimal(queryStretchPitch,CandidatesDataY[i],3,5,1,ultimateNum)/ultimateNum;
-						//float distanceMNote=RAPositionVarianceOptimal(queryPitchNote,CandidatesDataY[i],3,5,1,ultimateNum)/ultimateNum;
-						//distanceM=MyMinTwo(distanceM,distanceMNote);
-						//distanceM=distanceM*distanceMNote;
-						//distanceM=distanceM*0.5+distanceMNote*0.0;
-						//distanceM=DisLSOriginal[i];
-						//distanceM=DisEmdOriginal[i];
-						//if (query.n!=0 )
-						//{
-						//	//distanceM=DisLSOriginal[disEmdNum]*0.4/*+DisEmdOriginal[disEmdNum]*0.2*/+distanceM*0.6;
-						//	//distanceM=MyMin(distanceM,100,DisEmdOriginal[disEmdNum]);
-						//}
-
-
-
-
-						//			vector<vector<double>> matrixD(QuerySize,vector<double>(DataYSize)); //此为DTW匹配。效果不好
-						//			double distanceM=DTWBeginQueryAndSongSeven(queryStretchPitch,CandidatesDataY[i],matrixD)/QuerySize;
-						Dis.push_back(distanceM);
-						string songName=SongNameMapToDataY[i];
-
-						if (songDis.count(distanceM))
-						{
-							*(Dis.end()-1)+=0.00001;
-							songDis.insert(make_pair(distanceM+0.00001,songName)); 
-						}
-						else
-							songDis.insert(make_pair(distanceM,songName)); 
-						songName.erase(0,6);
-						int posSong=songName.rfind("pv");
-						//songNameFive.erase(5,6);
-						songName.erase(posSong-1,3);
-						tempList.push_back(songName);
 					}
 				}
 
-			}
-			lastTimeTemp=clock();
-			OneSongRATime=(double)(lastTimeTemp-firstTimeTemp)/CLOCKS_PER_SEC;
-			totalRATime+=OneSongRATime;
-			CandidatesDTWAll+=Dis.size();
-			string nameSong(wavename);
+				lastTimeTemp=clock();
+				OneSongRATime=(double)(lastTimeTemp-firstTimeTemp)/CLOCKS_PER_SEC;
+				totalRATime+=OneSongRATime;
+				CandidatesDTWAll+=Dis.size();
+				string nameSong(wavename);
 
-			string nameSongResult;
-			stable_sort(Dis.begin(),Dis.end());
-			set <string> SongFindAlready;
-			//float ratio=ratioAll;
-			float ratio=0.0;
-			string songNameFive;
-			for (int i=0;i!=songDis.size()&&i<=1000 ;i++)
-			{
-				songNameFive=songDis.find(Dis[i])->second;
-				if (SongFindAlready.count(songNameFive))
-				{
-					;
-				}
-				else
-				{
+				string nameSongResult;
+				stable_sort(Dis.begin(),Dis.end());
+				set <string> SongFindAlready;
+				float ratio=0.0;
+				string songNameFive;
 
-					SongFindAlready.insert(songNameFive);
-				}
-				if (SongFindAlready.size()==2)
+				for (int i=0;i!=songDis.size()&&i<=1000 ;i++)
 				{
-
-					if (Dis[0]/Dis[i]<=ratio)
+					songNameFive=songDis.find(Dis[i])->second;
+					if (SongFindAlready.count(songNameFive))
 					{
-						returnN=true;
-						recur+=3;
+						;
 					}
-					i+=10000;
+					else
+					{
+
+						SongFindAlready.insert(songNameFive);
+					}
+					if (SongFindAlready.size()==2)
+					{
+
+						if (Dis[0]/Dis[i]<=ratio)
+						{
+							returnN=true;
+							recur+=3;
+						}
+						i+=10000;
+					}
+				}
+				if (returnN==true)
+				{		
+					nameSongResult.assign(nameSong,0,nameSong.size()-4);
+					ResultDis1.insert(make_pair(nameSongResult,tempDis1));
+					ResultDis2.insert(make_pair(nameSongResult,tempDis2));
+					ResultDis3.insert(make_pair(nameSongResult,tempDis3));
+					ResultLable1.insert(make_pair(nameSongResult,tempList));
 				}
 			}
-			if (returnN==true)
-			{		
-				nameSongResult.assign(nameSong,0,nameSong.size()-4);
-				ResultDis1.insert(make_pair(nameSongResult,tempDis1));
-				ResultDis2.insert(make_pair(nameSongResult,tempDis2));
-				ResultDis3.insert(make_pair(nameSongResult,tempDis3));
-				ResultLable1.insert(make_pair(nameSongResult,tempList));
-			}
+		} //基于音符的检索的结尾
 
-
-		}
-} //基于音符的检索的结尾
 		lastTimeTempLSH1=clock();
 		OneSonglshnoteTime=(double)(lastTimeTempLSH1-firstTimeTempLSH1)/CLOCKS_PER_SEC;
 		totalLSHNoteTime+=OneSonglshnoteTime;
@@ -3820,16 +3194,9 @@ if (/*0*/recur!=1) //此为音符的检索
 			totalLSHNoteFirstTime+=OneSonglshPitchTime;
 		}
 
-
 		if (returnN==false)
 		{
-
-
 			firstTimeTempLSH2=clock();
-			//vector<vector<IntT>> IndexCandidatesStretch;
-			//vector<vector<float>> IndexCandidatesDis;
-			//vector<vector<IntT>> CandidatesNumStretch;
-			//vector<IntT> CandidatesFilter;
 			IndexCandidatesStretch.clear();
 			IndexCandidatesDis.clear();
 			CandidatesNumStretch.clear();
@@ -3837,24 +3204,13 @@ if (/*0*/recur!=1) //此为音符的检索
 
 #if 1 //这里为帧的LSH检索
 
-
 			LinearCoe=0;
 			FloorLevel=FloorLevelInitial;
-			//if (recur==0)
-			//{
-			//	StretchStep=0.2;
-			//}
-			//else
-			//	StretchStep=0.1;
+			
 			for (;FloorLevel<UpperLimit+StretchStep && LinearCoe< LinearCoeTotal;FloorLevel+=StretchStep)
 			{
 				PPointT *QueriesArray=NULL;//要free
-				/*if (FloorLevel>=0.8 || FloorLevel<=1.3)
-				{
-				StretchStep=0.05;
-				}
-				else*/
-				//StretchStep=0.1;
+				
 				if ((recur==1 || recur==2 )&& FloorLevel<=1.01 && FloorLevel>=0.99)
 				{
 					continue;
@@ -3886,11 +3242,7 @@ if (/*0*/recur!=1) //此为音符的检索
 					vector <float> DisCandidates;
 					vector<IntT> CandidatesNum;//每个点返回的数目存入Vector
 					int curreIndex=0;
-					//for (int i=0;i<ResultSize;i++)
-					//{
-					//	IndexCandidates.push_back(IndexArray[i]);
-					//	DisCandidates.push_back(IndexArrayDis[i]);
-					//}
+					
 					for (int i=0;i<LSHFilterReturnNum;i++)
 					{
 						CandidatesFilter.push_back(IndexFilterArray[i]);
@@ -3918,9 +3270,7 @@ if (/*0*/recur!=1) //此为音符的检索
 										if (samePointIte->second[k]==IndexArray[l+curreIndex])
 										{
 											insertY=false;
-
 										}
-
 									}
 									if (insertY==true)
 									{
@@ -3929,18 +3279,14 @@ if (/*0*/recur!=1) //此为音符的检索
 									}
 									else
 										numS--;
-
 								}
 								NumArray[i]+=numS;
-
 							}
 							else
 							{
 								IndexCandidates.push_back(IndexArray[j+curreIndex]);
 								DisCandidates.push_back(IndexArrayDis[j+curreIndex]);
-
 							}
-
 						}
 
 						curreIndex+=siz;
@@ -3949,6 +3295,7 @@ if (/*0*/recur!=1) //此为音符的检索
 					IndexCandidatesStretch.push_back(IndexCandidates);
 					CandidatesNumStretch.push_back(CandidatesNum);
 					IndexCandidatesDis.push_back(DisCandidates);
+
 					for (int i=0;i<nPointsQuery;i++)
 					{
 						free(QueriesArray[i]->coordinates);
@@ -3971,12 +3318,9 @@ if (/*0*/recur!=1) //此为音符的检索
 
 				}
 				LinearCoe++;
-
 			}
 
 #endif
-
-
 
 			lastTimeTempLSH2=clock();
 			OneSonglshPitchTime=(double)(lastTimeTempLSH2-firstTimeTempLSH2)/CLOCKS_PER_SEC;
@@ -3984,7 +3328,6 @@ if (/*0*/recur!=1) //此为音符的检索
 
 			for (int q=0;q<qRecurse;q++)
 			{
-
 				int sizeLSH=IndexCandidatesStretch.size();
 				vector<float>  queryStretchPitch;
 				vector< vector<float> >  CandidatesDataY;
@@ -3992,16 +3335,12 @@ if (/*0*/recur!=1) //此为音符的检索
 				vector <string> SongNameMapToDataY;
 				int CandidatesSizeInDWT=0;//返回的要精确匹配的数目
 				map <string , short > SongMapPosition;
+
 #if 1  //这里是frame的后处理
 				for	(FloorLevel=FloorLevelInitial,LinearCoe=0;FloorLevel<UpperLimit+StretchStep && LinearCoe<sizeLSH &&LinearCoe< LinearCoeTotal;FloorLevel+=StretchStep)
 				{
 					map <string , vector<pair<short, double>> > SongMapPositionAll;
-					//if (FloorLevel>=0.8 || FloorLevel<=1.3)
-					//{
-					//	StretchStep=0.05;
-					//}
-					//else
-					/*StretchStep=0.1;*/
+					
 					if ((recur==1 || recur==2 )&& FloorLevel<=1.01 && FloorLevel>=0.99)
 					{
 						continue;
@@ -4011,9 +3350,6 @@ if (/*0*/recur!=1) //此为音符的检索
 						continue;
 					}
 					int StepFactorCurrent=int(stepFactor*stepRatio*FloorLevel/**FloorLevel*/);
-
-
-
 
 					if (q==0)
 					{
@@ -4051,13 +3387,14 @@ if (/*0*/recur!=1) //此为音符的检索
 							SongMapPositionAll,-4,-8); //此为全部匹配（不是从头开始唱）
 					}
 					LinearCoe++;
-
-
 				}
+
 				lastTimeTempLSH2=clock();
 				OneSonglshPitchTime=(double)(lastTimeTempLSH2-firstTimeTempLSH2)/CLOCKS_PER_SEC;
 				totalLSHRetrievalPostProcessPitchTime+=OneSonglshPitchTime;
+
 #endif	
+
 #if 0 //这里为音符的扩展
 				sizeLSH=IndexCandidatesStretch.size();
 				map <string , vector<pair<short, double>> > SongMapPositionAll;
@@ -4066,32 +3403,25 @@ if (/*0*/recur!=1) //此为音符的检索
 					indexSongName,SongNameMapToDataY,CandidatesSizeInDWT,MatchBeginPos,SongMapPosition,
 					SongMapPositionAll,edge,edge*2);
 #endif	 
+
 				int sizeCandidates=SongNameMapToDataY.size();
 				Mean(queryPitchNote);
-
-				//static int CandidatesDTWAll=0;
-				//CandidatesDTWAll+=sizeCandidates;
 				Mean(queryStretchPitch);
 				int numLSH=0;
 				int thresholdMatch=0;
-
-
 
 				firstTimeTemp=clock();
 				vector <pair<float,int>> DisLS;
 				vector <float> DisLSOriginal;
 				for (int i=0;i<sizeCandidates;i++)
 				{
-
 					Mean(CandidatesDataY[i]);
 					vector <float> candidat;
 					float pitch_query=0;
 					int left=0;
 					int right=0;
-					//int Cedge=edge*(0.7+((float)i)/sizeCandidates);
 					float lsDis=CalculateOptimalEdge(queryStretchPitch,CandidatesDataY[i],left,right,edge*2,((float)i)/sizeCandidates);
 					DisLSOriginal.push_back(lsDis);
-
 					DisLS.push_back(make_pair(lsDis,i)); 
 				}
 
@@ -4105,10 +3435,9 @@ if (/*0*/recur!=1) //此为音符的检索
 				}
 				for (int i=0;i<LSLeft;i++)
 				{
-
 					LSResult.insert(DisLS[i].second);
-
 				}
+
 				lastTimeTemp=clock();
 				OneSongLSTime=(double)(lastTimeTemp-firstTimeTemp)/CLOCKS_PER_SEC;
 				totalLSTime+=OneSongLSTime;
@@ -4118,21 +3447,14 @@ if (/*0*/recur!=1) //此为音符的检索
 				OneSongEMDTime=(double)(lastTimeTemp-firstTimeTemp)/CLOCKS_PER_SEC;
 				totalEMDTime+=OneSongEMDTime;
 				firstTimeTemp=clock();
+
 				for (int i=0;i<sizeCandidates;i++)
 				{
 					disEmdNum++;
 
 					if ( LSResult.count(i))
-
 					{
-
 						Mean(CandidatesDataY[i]);
-						//vector <float> candidat;
-						//float pitch_query=0;
-
-						//pitch_query=((float)queryStretchPitch.size())/CandidatesDataY[i].size();
-						//StringToStringSame(CandidatesDataY[i],candidat,pitch_query);
-						//StringTosignature(candidat,candiY);
 						int QuerySize=queryStretchPitch.size();
 						int DataYSize=CandidatesDataY[i].size();
 						int sizeQandD=CandidatesDataY[i].size();
@@ -4177,7 +3499,6 @@ if (/*0*/recur!=1) //此为音符的检索
 						tempDis2.push_back(distanceM2);
 						ultimateNum=0;
 						MeanPlus(CandidatesDataY[i],0);
-						//distanceM3=RAPositionVarianceOptimal(queryStretchPitch,CandidatesDataY[i],3,5,1,ultimateNum)/ultimateNum;
 
 						distanceM3=((float)DataYSize)/QuerySize;
 						if (distanceM3>1)
@@ -4186,14 +3507,9 @@ if (/*0*/recur!=1) //此为音符的检索
 						}
 						else
 							distanceM3=(1-distanceM3)*2;
-						//distanceM3=RAPositionVarianceOptimal(queryStretchPitch,CandidatesDataY[i],3,5,1,ultimateNum)/ultimateNum;
 
 						tempDis3.push_back(distanceM3);
-						//distanceM=distanceM1*0.25+distanceM2*0.5+distanceM3*0.25;
-						distanceM=distanceM1*0.8+distanceM2*0.2;;
-
-
-
+						distanceM=distanceM1*0.8+distanceM2*0.2;
 
 						Dis.push_back(distanceM);
 						string songName=SongNameMapToDataY[i];
@@ -4207,7 +3523,6 @@ if (/*0*/recur!=1) //此为音符的检索
 							songDis.insert(make_pair(distanceM,songName)); 
 						songName.erase(0,6);
 						int posSong=songName.rfind("pv");
-						//songNameFive.erase(5,6);
 						songName.erase(posSong-1,3);
 						tempList.push_back(songName);
 					}
@@ -4222,8 +3537,7 @@ if (/*0*/recur!=1) //此为音符的检索
 
 				stable_sort(Dis.begin(),Dis.end());
 				set <string> SongFindAlready;
-				//float ratio=ratioAll;
-				//float ratio=0.74;
+
 				float ratio=110.00;
 				if (recur==10)
 				{
@@ -4246,7 +3560,6 @@ if (/*0*/recur!=1) //此为音符的检索
 					}
 					else
 					{
-
 						num++;
 						SongFindAlready.insert(songNameFive);
 						if (SongFindAlready.size()==num && num<1000)
@@ -4267,12 +3580,10 @@ if (/*0*/recur!=1) //此为音符的检索
 								}
 								i+=10000;
 							}
-							
 						}
 					}
-					
-					
 				}
+
 				if (returnN==true || recur>=2)
 				{		
 					nameSongResult.assign(nameSong,0,nameSong.size()-4);
@@ -4281,8 +3592,8 @@ if (/*0*/recur!=1) //此为音符的检索
 					ResultDis3.insert(make_pair(nameSongResult,tempDis3));
 					ResultLable1.insert(make_pair(nameSongResult,tempList));
 				}
-
 			}
+
 			if (recur==0 || recur==3)
 			{
 				lastTimeTempLSH2=clock();
@@ -4293,7 +3604,6 @@ if (/*0*/recur!=1) //此为音符的检索
 			lastTimeTempLSH2=clock();
 			OneSonglshPitchTime=(double)(lastTimeTempLSH2-firstTimeTempLSH2)/CLOCKS_PER_SEC;
 			totalLSHPitchTime+=OneSonglshPitchTime;
-
 		}
 		if (recur==0 || recur==3)
 		{
@@ -4313,14 +3623,7 @@ if (/*0*/recur!=1) //此为音符的检索
 			OneSonglshPitchTime=(double)(lastTimeTempLSH2-firstTimeTempLSH1)/CLOCKS_PER_SEC;
 			totalLSHthreeTime+=OneSonglshPitchTime;
 		}
-
 	}
-
-
-
-
-
-
 
 	if(NULL!=NoteEmd){
 		free (NoteEmd);
@@ -4341,8 +3644,6 @@ if (/*0*/recur!=1) //此为音符的检索
 		candiY.Weights=NULL;
 	}
 	
-
-
 	//if (total%500==0 || total >310)
 	//{
 	//	ofstream outTime("wav.result",ofstream::app);//LSH时间
@@ -4375,51 +3676,43 @@ if (/*0*/recur!=1) //此为音符的检索
 	int findtop5=0;
 	bool wrongA=TRUE;
 	static map <string,int> resultMap;
-	//for (int i=0;i!=Dis.size();i++)
 	set <string> SongFindAlready;
 	string firstSong;
-	int findNum=0;//控制输出的数目以及统计第几个找到的
+	int findNum=0;	//控制输出的数目以及统计第几个找到的
 	float ThrCal[1000]={0.0};
 	int numCal=0;
 	static float ThrRes[1000]={0.0};
-	//for (int i=0;i<1000;i++)
-	//{
-	//	ThrRes[i]=10.0;
-	//}
+
 	for (int i=0,k=0;i!=songDis.size()&&k<5 && i!= Dis.size() && k<500;i++)
 	{
 		if (songDis.count(Dis[i]))
 		{
-		songNameFive=songDis.find(Dis[i])->second;
+			songNameFive=songDis.find(Dis[i])->second;
 		
-		if (SongFindAlready.count(songNameFive))
-		{
-			;
-		}
-		else
-		{
-			k++;
+			if (SongFindAlready.count(songNameFive))
+			{
+				;
+			}
+			else
+			{
+				k++;
 			
-		SongFindAlready.insert(songNameFive);
-		int posSong=songNameFive.rfind("pv");
-		//songNameFive.erase(5,6);
-		songNameFive.erase(posSong-1,3);
-		songNameFive.erase(0,6);
+				SongFindAlready.insert(songNameFive);
+				int posSong=songNameFive.rfind("pv");
+				songNameFive.erase(posSong-1,3);
+				songNameFive.erase(0,6);
 		
-		songFive.push_back(songNameFive);
+				songFive.push_back(songNameFive);
+			}
 		}
-		}
-		
 	}
 	while (songFive.size()<5)
 	{
 		songFive.push_back("NONE");
 	}
-
 	outf.close();
 #endif	
 	return 0;
-
 }
 
 //参数均为输出参数，输入为5000newpv355.txt 中的pv文件，建立索引（文件需在程序运行目录/5355P文件夹中）
