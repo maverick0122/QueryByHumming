@@ -6,7 +6,6 @@ extern map<string,int> ListSong;
 int readindex(string dataIndex,map<string , vector<vector<double>>> &indexSongName)
 {
 	ifstream indexFile(dataIndex.c_str());
-	//map<string , vector<vector<double>>> indexSongName;
 	vector <double> pitchNum;
 	vector<vector<double>> database;
 	ifstream songPitch;
@@ -14,8 +13,6 @@ int readindex(string dataIndex,map<string , vector<vector<double>>> &indexSongNa
 	string::size_type pos=0;
 	while (indexFile>>songName)
 	{
-		//vector <double> pitchNum;
-		//ifstream songPitch;
 		songPitch.open(songName.c_str());
 		while (getline(songPitch,songPitchNum))
 		{
@@ -36,7 +33,6 @@ int readindex(string dataIndex,map<string , vector<vector<double>>> &indexSongNa
 	}
 	indexFile.close();
 	return 0;
-
 }
 
 int IndexSignToQueryAndDataVectorHummingMatchLeastALLNote(vector<pair<short, short>>& posPair,vector<IntT> &IndexCandidatesStretch,vector<IntT> &CandidatesNumStretch,float stretchFactor,
@@ -45,18 +41,13 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALLNote(vector<pair<short, sho
 													  map<string , vector<float>> &indexSongName,vector <string> &SongNameMapToDataY,
 													  int &CandidatesSizeInDWT,int MatchBeginPos,map <string , short > &SongMapPosition,
 													  map <string , vector<pair<short, double>> >  &SongMapPositionAll,int offsetbegin, int offsetLength)//根据伸缩因子返回候选向量以及对应的歌曲名字
-{  //匹配最少数目，即精确匹配的数目最少
-	//vector< vector<double> > queryX;
+{  
+	//匹配最少数目，即精确匹配的数目最少
 	int posBegin=100;//小于1/posBegin的保留
 	queryX.clear();
-	//SongNameMapToDataY.clear();
-	//dataY.clear();
 	StringToString(queryPitch,queryX,1);
-	//queryStretchXAll.push_back(queryX);
 	int sizePoints=CandidatesNumStretch.size();
 	int sizeCandidates=0;
-	//string SongName;
-	//short posInSong=0;
 	int QueryLSHPos=0;
 	int QueryLSHLength=0;
 	float DataYLength=0;
@@ -65,12 +56,6 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALLNote(vector<pair<short, sho
 	int DifferPos=0;
 	int sizeQuery=queryX.size();
 	int queryLogicPos=0;
-	//if (stretchFactor>1)
-	//{
-	//	sizeQuery=sizeQuery*stretchFactor;
-	//}
-	//sizeQuery=(sizeQuery*stretchFactor+offsetLength);
-	//int CandidatesSizeInDWT=0;
 	pair<string, pair<short ,short>> SongNamePos;
 	map<string , vector<float>> :: iterator SongTone;
 	vector<float>  DataYOnePoint;
@@ -91,8 +76,6 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALLNote(vector<pair<short, sho
 			{
 				QueryLSHPos=posPair[i].first;
 				QueryLSHLength=posPair[i].second;
-				//SongName=IndexLSH.find(IndexCandidatesStretch[j])->second.first;
-				//posInSong=IndexLSH.find(IndexCandidatesStretch[j])->second.second;
 				SongNamePos=IndexLSH.find(IndexCandidatesStretch[j])->second;
 				DataYLength=SongNamePos.second.second;
 				ratioLength=DataYLength/QueryLSHLength;
@@ -109,7 +92,6 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALLNote(vector<pair<short, sho
 						for (int k=DifferPos;k<DifferPos+accuSizeQuery && k<sizeSong;k++)
 						{
 							DataYOnePoint.push_back(SongTone->second[k]);//将此点复制过去
-
 						}
 						if (SongMapPositionAll.count(SongNamePos.first))
 						{
@@ -129,7 +111,6 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALLNote(vector<pair<short, sho
 								SongNameMapToDataY.push_back(SongNamePos.first);
 								SongMapPositionAll[SongNamePos.first].push_back(make_pair(DifferPos,accuSizeQuery));
 								CandidatesSizeInDWT++;
-
 							}
 						}
 						else
@@ -140,7 +121,6 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALLNote(vector<pair<short, sho
 							dataY.push_back(DataYOnePoint);
 							SongNameMapToDataY.push_back(SongNamePos.first);
 							CandidatesSizeInDWT++;
-
 						}
 					}
 					else if (DifferPos<0 && DifferPos >-(sizeQuery/3) &&  DifferPos+sizeQuery<sizeSong)
@@ -149,7 +129,6 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALLNote(vector<pair<short, sho
 						for (int k=0;k<DifferPos+accuSizeQuery && k<sizeSong;k++)
 						{
 							DataYOnePoint.push_back(SongTone->second[k]);//将此点复制过去
-
 						}
 						if (SongMapPositionAll.count(SongNamePos.first))
 						{
@@ -169,7 +148,6 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALLNote(vector<pair<short, sho
 								SongNameMapToDataY.push_back(SongNamePos.first);
 								SongMapPositionAll[SongNamePos.first].push_back(make_pair(DifferPos,accuSizeQuery));
 								CandidatesSizeInDWT++;
-
 							}
 						}
 						else
@@ -180,26 +158,19 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALLNote(vector<pair<short, sho
 							dataY.push_back(DataYOnePoint);
 							SongNameMapToDataY.push_back(SongNamePos.first);
 							CandidatesSizeInDWT++;
-
 						}
-
 					}
 					else
 						CandidatesNumStretch[i]--;//此矩阵中存储实际精确匹配的数目
-
 				}
 				else
 					CandidatesNumStretch[i]--;
-
-
 			}
 			else
 				CandidatesNumStretch[i]--;
-			//sizeCandidates++;
 		}
 	}
 	return 0;
-
 }
 
 
@@ -209,7 +180,8 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALL(vector<IntT> &IndexCandida
 													  map<string , vector<float>> &indexSongName,vector <string> &SongNameMapToDataY,
 													  int &CandidatesSizeInDWT,int MatchBeginPos,map <string , short > &SongMapPosition,
 													  map <string , vector<pair<short, double>> >  &SongMapPositionAll,int offsetbegin, int offsetLength)//根据伸缩因子返回候选向量以及对应的歌曲名字
-{  //匹配最少数目，即精确匹配的数目最少
+{  
+	//匹配最少数目，即精确匹配的数目最少
 	int posBegin=100;//小于1/posBegin的保留
 	queryX.clear();
 	StringToString(queryPitch,queryX,1);
@@ -323,18 +295,13 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALL(vector<IntT> &IndexCandida
 							dataY.push_back(DataYOnePoint);
 							SongNameMapToDataY.push_back(SongNamePos.first);
 							CandidatesSizeInDWT++;
-
 						}
-
 					}
 					else
 						CandidatesNumStretch[i]--;//此矩阵中存储实际精确匹配的数目
-
 				}
 				else
 					CandidatesNumStretch[i]--;
-
-
 			}
 			else
 				CandidatesNumStretch[i]--;
@@ -413,7 +380,6 @@ int readIndexPitch8MinutesNewPv(string dataIndex, map<string , vector<float>> &i
 				}
 			}
 		}
-
 		
 		if (totalMidi%10==0)	//每10首歌输出一次音高序列点数
 		{
@@ -787,10 +753,7 @@ int QueryPitchToLSHVectorLinearStretchingShortToMoreNote(vector<pair<short, shor
 					CuNoteNum=0;
 					currentTone=queryPitch[i];
 					LSHVector20Dimention.push_back(queryPitch[i]);
-
 				}
-
-
 			}
 
 			if (LSHVector20Dimention.size()==NoteDimention)
@@ -808,7 +771,6 @@ int QueryPitchToLSHVectorLinearStretchingShortToMoreNote(vector<pair<short, shor
 					MeanNoteLSH(LSHVector20Dimention,mean);
 					LSHQueryVectorOneStretch.push_back(LSHVector20Dimention);
 				}
-
 			}
 			else
 				pos+=sizeTone;
@@ -819,11 +781,8 @@ int QueryPitchToLSHVectorLinearStretchingShortToMoreNote(vector<pair<short, shor
 			else
 			{
 				pos+=oneNoteDuration;
-
 			}
-
 		}
-
 	}
 	LSHQueryVectorLinearStretching.push_back(LSHQueryVectorOneStretch);
 
@@ -867,7 +826,6 @@ int QueryPitchToLSHVectorLinearStretchingShortToMoreNoteFirst(vector<pair<short,
 		int MaxLength=10;
 		for (int pos=0;pos<sizeTone;)
 		{
-
 			currentTone=1000;
 			frameNow=0;
 			oneNoteDuration=0;
@@ -920,10 +878,7 @@ int QueryPitchToLSHVectorLinearStretchingShortToMoreNoteFirst(vector<pair<short,
 					CuNoteNum=0;
 					currentTone=queryPitch[i];
 					LSHVector20Dimention.push_back(queryPitch[i]);
-
 				}
-
-
 			}
 
 			if (LSHVector20Dimention.size()==NoteDimention)
@@ -954,9 +909,7 @@ int QueryPitchToLSHVectorLinearStretchingShortToMoreNoteFirst(vector<pair<short,
 				pos+=oneNoteDuration;
 
 			}
-
 		}
-
 	}
 
 	LSHQueryVectorLinearStretching.push_back(LSHQueryVectorOneStretch);
@@ -1031,11 +984,7 @@ int QueryPitchToLSHVectorLinearStretchingShortToMore(vector <float> &queryPitch,
 		outf.close();
 	}
 	
-	
-
-
 	return 0;
-
 }
 
 
@@ -1045,33 +994,23 @@ int IndexSignToQueryAndDataVectorHummingBeginQueryLengthFixedAndNoClearMatchLeas
 															  map<string , vector<float>> &indexSongName,vector <string> &SongNameMapToDataY,
 															  int &CandidatesSizeInDWT,int MatchBeginPos,map <string , short > &SongMapPosition,
 															  vector<float>  &CandidatesDataYDis)//根据伸缩因子返回候选向量以及对应的歌曲名字
-{  //匹配最少数目，即精确匹配的数目最少
-	//vector< vector<double> > queryX;
+{  
+	//匹配最少数目，即精确匹配的数目最少
 	int posBegin=10;//与开头比较近的小于长度1/posBegin的全部保留匹配
 	queryX.clear();
-	//SongNameMapToDataY.clear();
-	//dataY.clear();
 	StringToString(queryPitch,queryX,1);
-	//queryStretchXAll.push_back(queryX);
 	int sizePoints=CandidatesNumStretch.size();
 	int sizeCandidates=0;
-	//string SongName;
-	//short posInSong=0;
 	int QueryLSHPos=0;
 	int DifferPos=0;
 	int sizeQuery=queryX.size();
-	//if (stretchFactor>1)
-	//{
-	//	sizeQuery=sizeQuery*stretchFactor;
-	//}
 	sizeQuery=sizeQuery*stretchFactor;
-	//int CandidatesSizeInDWT=0;
 	pair<string, short> SongNamePos;
 	map<string , vector<float>> :: iterator SongTone;
-	 vector<float>  DataYOnePoint;
+	vector<float>  DataYOnePoint;
 	vector <string> :: iterator SongIter;
-	 vector< vector<float> >  :: iterator SongPitchIter;
-	 vector<float>  :: iterator SongDisIter;
+	vector< vector<float> >  :: iterator SongPitchIter;
+	vector<float>  :: iterator SongDisIter;
 
 	for (int i=0;i<sizePoints;i++)
 	{
@@ -1084,8 +1023,6 @@ int IndexSignToQueryAndDataVectorHummingBeginQueryLengthFixedAndNoClearMatchLeas
 			if (IndexLSH.count(IndexCandidatesStretch[j]))
 			{
 				QueryLSHPos=i*stepFactor;
-				//SongName=IndexLSH.find(IndexCandidatesStretch[j])->second.first;
-				//posInSong=IndexLSH.find(IndexCandidatesStretch[j])->second.second;
 				SongNamePos=IndexLSH.find(IndexCandidatesStretch[j])->second;
 				DifferPos=SongNamePos.second-QueryLSHPos;
 				if (indexSongName.count(SongNamePos.first))
@@ -1098,7 +1035,6 @@ int IndexSignToQueryAndDataVectorHummingBeginQueryLengthFixedAndNoClearMatchLeas
 						for (int k=DifferPos;k<DifferPos+sizeQuery && k<sizeSong;k++)
 						{
 							DataYOnePoint.push_back(SongTone->second[k]);//将此点复制过去
-
 						}
 						if (SongMapPosition.count(SongNamePos.first))
 						{
@@ -1117,7 +1053,6 @@ int IndexSignToQueryAndDataVectorHummingBeginQueryLengthFixedAndNoClearMatchLeas
 									CandidatesDataYDis.push_back(DisCandidates[j]);
 									SongNameMapToDataY.push_back(SongNamePos.first);
 									SongMapPosition[SongNamePos.first]=DifferPos;
-
 								}
 								else
 								{
@@ -1126,15 +1061,7 @@ int IndexSignToQueryAndDataVectorHummingBeginQueryLengthFixedAndNoClearMatchLeas
 									SongNameMapToDataY.push_back(SongNamePos.first);
 									SongMapPosition[SongNamePos.first]=sizeQuery/posBegin;
 									CandidatesSizeInDWT++;
-
 								}
-								/*SongIter=find(SongNameMapToDataY.begin(),SongNameMapToDataY.end(),SongNamePos.first);
-								SongPitchIter=dataY.begin()+(SongIter-SongNameMapToDataY.begin());
-								SongNameMapToDataY.erase(SongIter);
-								dataY.erase(SongPitchIter);
-								dataY.push_back(DataYOnePoint);
-								SongNameMapToDataY.push_back(SongNamePos.first);
-								SongMapPosition[SongNamePos.first]=DifferPos;*/
 							}
 						}
 						else
@@ -1162,7 +1089,6 @@ int IndexSignToQueryAndDataVectorHummingBeginQueryLengthFixedAndNoClearMatchLeas
 							CandidatesDataYDis.push_back(DisCandidates[j]);
 							SongNameMapToDataY.push_back(SongNamePos.first);
 							CandidatesSizeInDWT++;
-
 						}						
 						else
 						{
@@ -1181,7 +1107,6 @@ int IndexSignToQueryAndDataVectorHummingBeginQueryLengthFixedAndNoClearMatchLeas
 									CandidatesDataYDis.push_back(DisCandidates[j]);
 									SongNameMapToDataY.push_back(SongNamePos.first);
 									SongMapPosition[SongNamePos.first]=abs(DifferPos);
-
 								}
 								else
 								{
@@ -1190,24 +1115,18 @@ int IndexSignToQueryAndDataVectorHummingBeginQueryLengthFixedAndNoClearMatchLeas
 									SongNameMapToDataY.push_back(SongNamePos.first);
 									SongMapPosition[SongNamePos.first]=sizeQuery/posBegin;
 									CandidatesSizeInDWT++;
-
 								}
 							}
-						
 						}
 					}
 					else
 						CandidatesNumStretch[i]--;//此矩阵中存储实际精确匹配的数目
-
 				}
 				else
 					CandidatesNumStretch[i]--;
-
-
 			}
 			else
 				CandidatesNumStretch[i]--;
-			//sizeCandidates++;
 		}
 	}
 	return 0;
@@ -1215,35 +1134,21 @@ int IndexSignToQueryAndDataVectorHummingBeginQueryLengthFixedAndNoClearMatchLeas
 }
 
 
-
-
-
 int IndexSignToQueryAndDataVectorHummingMatchLeastALL(vector<IntT> &IndexCandidatesStretch,vector<IntT> &CandidatesNumStretch,float stretchFactor,
 																				  map<unsigned long , pair<string,short>> &IndexLSH,int stepFactor,vector <vector <double>> queryPitch,
 																				  vector< vector<double> > &queryX,vector< vector< vector<double> > >&dataY,
 																				  map<string , vector<vector<double>>> &indexSongName,vector <string> &SongNameMapToDataY,
 																				  int &CandidatesSizeInDWT,int MatchBeginPos,map <string , short > &SongMapPosition)//根据伸缩因子返回候选向量以及对应的歌曲名字
-{  //匹配最少数目，即精确匹配的数目最少
-	//vector< vector<double> > queryX;
+{  
+	//匹配最少数目，即精确匹配的数目最少
 	int posBegin=30;//与开头比较近的小于长度1/posBegin的全部保留匹配
 	queryX.clear();
-	//SongNameMapToDataY.clear();
-	//dataY.clear();
-	//StringToString(queryPitch,queryX,1);
-	//queryStretchXAll.push_back(queryX);
 	int sizePoints=CandidatesNumStretch.size();
 	int sizeCandidates=0;
-	//string SongName;
-	//short posInSong=0;
 	int QueryLSHPos=0;
 	int DifferPos=0;
 	int sizeQuery=queryX.size();
-	//if (stretchFactor>1)
-	//{
-	//	sizeQuery=sizeQuery*stretchFactor;
-	//}
 	sizeQuery=sizeQuery*stretchFactor;
-	//int CandidatesSizeInDWT=0;
 	pair<string, short> SongNamePos;
 	map<string , vector<vector<double>>> :: iterator SongTone;
 	vector< vector<double> > DataYOnePoint;
@@ -1261,8 +1166,6 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALL(vector<IntT> &IndexCandida
 			if (IndexLSH.count(IndexCandidatesStretch[j]))
 			{
 				QueryLSHPos=i*stepFactor;
-				//SongName=IndexLSH.find(IndexCandidatesStretch[j])->second.first;
-				//posInSong=IndexLSH.find(IndexCandidatesStretch[j])->second.second;
 				SongNamePos=IndexLSH.find(IndexCandidatesStretch[j])->second;
 				DifferPos=SongNamePos.second-QueryLSHPos;
 				if (indexSongName.count(SongNamePos.first))
@@ -1287,35 +1190,24 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALL(vector<IntT> &IndexCandida
 						for (int k=0;k<sizeQuery && k<sizeSong;k++)
 						{
 							DataYOnePoint.push_back(SongTone->second[k]);//将此点复制过去
-
 						}
 						SongMapPosition.insert(make_pair(SongNamePos.first,abs(DifferPos)));
 						dataY.push_back(DataYOnePoint);
 						SongNameMapToDataY.push_back(SongNamePos.first);
 						CandidatesSizeInDWT++;
-
 					}
 					else
 						CandidatesNumStretch[i]--;//此矩阵中存储实际精确匹配的数目
-
 				}
 				else
 					CandidatesNumStretch[i]--;
-
-
 			}
 			else
 				CandidatesNumStretch[i]--;
-			//sizeCandidates++;
 		}
 	}
 	return 0;
-
 }
-
-
-
-
 
 
 int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vector<vector<IntT>> &IndexCandidatesStretch,
@@ -1380,12 +1272,10 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 						outf<<"find: "<<find1<<"findSamll: "<<findSmall<<endl;
 						cout<<"allwav: "<<allWav<<endl;
 						outf<<"allwav: "<<allWav<<endl;
-
 					}
 
 					j=sizeC;
 					i=SizePoints;
-
 				}
 				else if	(nameSongResult== songNameFive && QueryLSHPos>-(stretchCurrent/2) 
 					&& QueryLSHPos<stretchCurrent/2 && !BigRe)
@@ -1397,22 +1287,16 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 						outf<<"find: "<<find1<<endl;
 						cout<<"allwav: "<<allWav<<endl;
 						outf<<"allwav: "<<allWav<<endl;
-
 					}
-
 					BigRe=TRUE;
-
 				}
-
 			}
 		}
 	}
 
-
 	int currentNum=0;
 	ofstream outf2("wav.result",ofstream::app);//识别结果保存文件
 	ofstream outfCandidates("wavCandidates.result",ofstream::app);
-
 
 	static int num1=0;
 	static int num2=0;
@@ -1457,11 +1341,9 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 				else
 					songNameFive=IndexLSH.find(IndexCandidatesStretch[i][j])->second.first;
 
-				//songNameFive=IndexLSH.find(IndexCandidatesStretch[i][j])->second.first;
 				QueryLSHPos=IndexLSH.find(IndexCandidatesStretch[i][j])->second.second-i*stepFactor;
 				songNameFive.erase(0,6);
 				int posSong=songNameFive.rfind("pv");
-				//songNameFive.erase(5,6);
 				songNameFive.erase(posSong-1,3);
 				songUl.insert(make_pair(IndexCandidatesDis[i][j],songNameFive));
 				if (songNum.count(songNameFive))
@@ -1474,16 +1356,13 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 
 				string::size_type beginiter=0;
 				string::size_type enditer=0;
-				//beginiter=nameSong.rfind("\");
 				enditer=nameSong.rfind(".wav");
 				string nameSongResult;
 				nameSongResult.assign(nameSong,enditer-4,4);
 				if (nameSongResult== songNameFive )
 				{
 					currentNum++;
-
 				}
-
 			}
 		}
 	}
@@ -1528,14 +1407,7 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 
 		songDis.insert(make_pair(iterdis->second+fl*numfl,iterdis->first));
 	}
-	//map <float, string> ::const_iterator iterdis=songUl.begin();
-	//for (;iterdis!=songUl.end();iterdis++)
-	//{
-	//	numfl++;
-	//	Dis.push_back(iterdis->first);
 
-	//	songDis.insert(make_pair(iterdis->first,iterdis->second));
-	//}
 	set <string> SongFindAlready;
 	static int total=0;
 	int findtop5=0;
@@ -1548,15 +1420,10 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 		songNameFive=songDis.find(Dis[totalDis-i-1])->second;
 		
 		accurateFind=SongFindAlready.size();
-		//songNameFive.erase(0,6);
-		//int posSong=songNameFive.rfind("pv");
-		//songNameFive.erase(5,6);
-		//songNameFive.erase(posSong-1,3);
 		string nameSong(wavename);
 
 		string::size_type beginiter=0;
 		string::size_type enditer=0;
-		//beginiter=nameSong.rfind("\");
 		enditer=nameSong.rfind(".wav");
 		string nameSongResult;
 		nameSongResult.assign(nameSong,enditer-4,4);
@@ -1566,11 +1433,6 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 		{
 			top5R=0;
 		}
-		//if (wrongA==TRUE)
-		//{
-		//	wrongNum[top5R]++;
-		//	wrongA=FALSE;
-		//}
 		if (SongFindAlready.count(songNameFive))
 		{
 			;
@@ -1587,7 +1449,6 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 					outf<<"the distance: "<<Dis[i]<<endl;
 					cout<<"the distance: "<<Dis[i]<<endl;
 				}
-
 			}
 
 			SongFindAlready.insert(songNameFive);
@@ -1599,7 +1460,6 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 				if (accurateFind==0)
 				{
 					num1++,num2++,num3++,num4++,num5++,num10++,num20++,num50++;num100++;num200++;
-					//num400++,num800++,num1200++,num1600++,num2000++,num2400++,num2800++,num3200++,num3600++,num4000++;
 					rightNum[top5R]++;
 					wrongNum[top5R]--;
 					findtop5=1;
@@ -1607,7 +1467,6 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 				if (accurateFind==1)
 				{
 					num2++,num3++,num4++,num5++,num10++,num20++,num50++;num100++;num200++;
-					//num400++,num800++,num1200++,num1600++,num2000++,num2400++,num2800++,num3200++,num3600++,num4000++;
 					rightNum[top5R]++;
 					wrongNum[top5R]--;
 					findtop5=1;
@@ -1615,14 +1474,12 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 				if (accurateFind==2)
 				{
 					num3++,num4++,num5++,num10++,num20++,num50++;num100++;num200++;
-					//num400++,num800++,num1200++,num1600++,num2000++,num2400++,num2800++,num3200++,num3600++,num4000++;
 					rightNum[top5R]++;
 					wrongNum[top5R]--;
 					findtop5=1;
 				}
 				if (accurateFind==3){
 					num4++,num5++,num10++,num20++,num50++;num100++;num200++;
-				//	num400++,num800++,num1200++,num1600++,num2000++,num2400++,num2800++,num3200++,num3600++,num4000++;
 					rightNum[top5R]++;
 					wrongNum[top5R]--;
 					findtop5=1;
@@ -1630,8 +1487,6 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 				if (accurateFind==4)
 				{
 					num5++,num10++,num20++,num50++;num100++;num200++;
-
-					//num400++,num800++,num1200++,num1600++,num2000++,num2400++,num2800++,num3200++,num3600++,num4000++;
 					rightNum[top5R]++;
 					wrongNum[top5R]--;
 					findtop5=1;
@@ -1639,28 +1494,22 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 				if (accurateFind<=9 && accurateFind>4)
 				{
 					num10++,num20++,num50++;num100++;num200++;
-					//num400++,num800++,num1200++,num1600++,num2000++,num2400++,num2800++,num3200++,num3600++,num4000++;
 				}
 				if (accurateFind<=19 && accurateFind>9)
 				{
 					num20++,num50++;num100++;num200++;
-					//num400++,num800++,num1200++,num1600++,num2000++,num2400++,num2800++,num3200++,num3600++,num4000++;
-
 				}
 				if (accurateFind<=50 && accurateFind>19)
 				{
 					num50++;num100++;num200++;
-					//num400++,num800++,num1200++,num1600++,num2000++,num2400++,num2800++,num3200++,num3600++,num4000++;
 				}
 				if (accurateFind<=100 && accurateFind>50)
 				{
 					num100++;num200++;
-					//num400++,num800++,num1200++,num1600++,num2000++,num2400++,num2800++,num3200++,num3600++,num4000++;
 				}
 				if (accurateFind<=200 && accurateFind>100)
 				{
 					num200++;
-					//num400++,num800++,num1200++,num1600++,num2000++,num2400++,num2800++,num3200++,num3600++,num4000++;
 				}
 				if (findNum<=40)
 				{
@@ -1682,7 +1531,6 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 				if (findNum<=200 && findNum>160)
 				{
 					num2000++,num2400++,num2800++,num3200++,num3600++,num4000++;
-
 				}
 				if (findNum<=400 && findNum>200)
 				{
@@ -1695,7 +1543,6 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 				if (findNum<=1200 && findNum>800)
 				{
 					num3200++,num3600++,num4000++;
-
 				}
 				if (findNum<=1600 && findNum>1200)
 				{
@@ -1711,10 +1558,8 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 					cout<<"召回率：find40: "<<num400<<"  find80: "<<num800<<"  find120: "<<num1200<<"  find160: "<<num1600<<"  find200: "<<num2000<<"  find400: "<<num2400<<"  find800: "<<num2800<<"  find1200: "<<num3200<<"  find1600: "<<num3600<<"  find2000: "<<num4000<<endl;
 					outf2<<"准确率：find1: "<<num1<<"  find2: "<<num2<<"  find3: "<<num3<<"  find4: "<<num4<<"  find5: "<<num5<<"  find10: "<<num10<<"  find20: "<<num20<<"  find50: "<<num50<<"  find100: "<<num100<<"  find200: "<<num200<<"  findall: "<<findall<<endl;
 					outf2<<"召回率：find40: "<<num400<<"  find80: "<<num800<<"  find120: "<<num1200<<"  find160: "<<num1600<<"  find200: "<<num2000<<"  find400: "<<num2400<<"  find800: "<<num2800<<"  find1200: "<<num3200<<"  find1600: "<<num3600<<"  find2000: "<<num4000<<endl;
-
 				}
 			}
-
 		}
 		findNum+=Dis[totalDis-i-1];
 	}
@@ -1731,6 +1576,7 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 		outfError<<wavename<<endl;
 		outfError.close();
 	}
+
 	int allsongC=0;
 	if (total%500==0 || total>=4428)
 	{
@@ -1757,18 +1603,9 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 	{
 		cout<<"the total: "<<total<<endl;
 		outf2<<"the total: "<<total<<endl;
-
 	}
-
 	return 0;
 }
-
-
-
-
-
-
-
 
 
 int LSHresult(char *wavename,int sizeQuery,int stepFactor,float stretch,vector<vector<IntT>> &IndexCandidatesStretch,
@@ -1805,13 +1642,11 @@ int LSHresult(char *wavename,int sizeQuery,int stepFactor,float stretch,vector<v
 				QueryLSHPos=IndexLSH.find(IndexCandidatesStretch[i][j])->second.second-i*stepFactor;
 				songNameFive.erase(0,6);
 				int posSong=songNameFive.rfind("pv");
-				//songNameFive.erase(5,6);
 				songNameFive.erase(posSong-1,3);
 				string nameSong(wavename);
 
 				string::size_type beginiter=0;
 				string::size_type enditer=0;
-				//beginiter=nameSong.rfind("\");
 				enditer=nameSong.rfind(".wav");
 				string nameSongResult;
 				nameSongResult.assign(nameSong,enditer-4,4);
@@ -1827,9 +1662,7 @@ int LSHresult(char *wavename,int sizeQuery,int stepFactor,float stretch,vector<v
 						outf<<"find: "<<find1<<"findSamll: "<<findSmall<<endl;
 						cout<<"allwav: "<<allWav<<endl;
 						outf<<"allwav: "<<allWav<<endl;
-
 					}
-					
 					j=sizeC;
 					i=SizePoints;
 
@@ -1844,17 +1677,12 @@ int LSHresult(char *wavename,int sizeQuery,int stepFactor,float stretch,vector<v
 						outf<<"find: "<<find1<<endl;
 						cout<<"allwav: "<<allWav<<endl;
 						outf<<"allwav: "<<allWav<<endl;
-
 					}
-					
 					BigRe=TRUE;
-
 				}
-
 			}
 		}
 	}
-
 
 	int currentNum=0;
 	for (int i=0;i<SizePoints;i++)
@@ -1870,22 +1698,18 @@ int LSHresult(char *wavename,int sizeQuery,int stepFactor,float stretch,vector<v
 				QueryLSHPos=IndexLSH.find(IndexCandidatesStretch[i][j])->second.second-i*stepFactor;
 				songNameFive.erase(0,6);
 				int posSong=songNameFive.rfind("pv");
-				//songNameFive.erase(5,6);
 				songNameFive.erase(posSong-1,3);
 				string nameSong(wavename);
 
 				string::size_type beginiter=0;
 				string::size_type enditer=0;
-				//beginiter=nameSong.rfind("\");
 				enditer=nameSong.rfind(".wav");
 				string nameSongResult;
 				nameSongResult.assign(nameSong,enditer-4,4);
 				if (nameSongResult== songNameFive )
 				{
 					currentNum++;
-
 				}
-
 			}
 		}
 	}
@@ -1931,28 +1755,24 @@ int LSHFilter(char *wavename,map<string ,int> &LSHFilterMap,vector<IntT> &Candid
 	int currentNum=0;
 	for (int i=0;i<SizePoints;i++)
 	{
-			if (IndexLSH.count(CandidatesFilter[i]))
+		if (IndexLSH.count(CandidatesFilter[i]))
+		{
+			songNameFive=IndexLSH.find(CandidatesFilter[i])->second.first;
+			songNameFive.erase(0,6);
+			int posSong=songNameFive.rfind("pv");
+			songNameFive.erase(posSong-1,3);
+			string nameSong(wavename);
+
+			string::size_type beginiter=0;
+			string::size_type enditer=0;
+			enditer=nameSong.rfind(".wav");
+			string nameSongResult;
+			nameSongResult.assign(nameSong,enditer-4,4);
+			if (nameSongResult== songNameFive )
 			{
-				songNameFive=IndexLSH.find(CandidatesFilter[i])->second.first;
-				songNameFive.erase(0,6);
-				int posSong=songNameFive.rfind("pv");
-				//songNameFive.erase(5,6);
-				songNameFive.erase(posSong-1,3);
-				string nameSong(wavename);
-
-				string::size_type beginiter=0;
-				string::size_type enditer=0;
-				//beginiter=nameSong.rfind("\");
-				enditer=nameSong.rfind(".wav");
-				string nameSongResult;
-				nameSongResult.assign(nameSong,enditer-4,4);
-				if (nameSongResult== songNameFive )
-				{
-					currentNum++;
-
-				}
-
+				currentNum++;
 			}
+		}
 	}
 	if (currentNum<500)
 	{
@@ -1992,11 +1812,7 @@ int LSHFilter(char *wavename,map<string ,int> &LSHFilterMap,vector<IntT> &Candid
 			}
 			else
 			    LSHFilterMap[songNameFive]=1;
-			
 		}
 	}
-
 	return 0;
 }
-
-
