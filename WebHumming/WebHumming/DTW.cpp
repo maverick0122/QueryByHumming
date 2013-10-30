@@ -9,7 +9,6 @@ const double penalty=0;
 const double disConst=4.0;
 const double disConstString=4.0;//RA的固定常数  原始是16
 const double disConstLSHRA=9.0;
-//string CurrentFileName;
 map<int,vector<int>> samePoint;
 map<string,int> ListSong;
 map<string,vector <float>> ResultDis1;
@@ -18,7 +17,6 @@ map<string,vector <float>> ResultDis2;
 map<string,vector <string>> ResultLable2;
 map<string,vector <float>> ResultDis3;
 map<string,vector <string>> ResultLable3;
-HANDLE hMutex;
 CRITICAL_SECTION g_cs;
 
 
@@ -3863,8 +3861,6 @@ int indexRead(ParamInfo *param,	map <string ,string> &songIDAndName,
 	clock_t firstTime,lastTime;
 	double OneSongMatchTime=0;
 	static int ThreadCNum=-1;
-
-	WaitForSingleObject(hMutex,INFINITE);	//线程被挂起，直到hMutex标记的对象被触发
 
 	ThreadCNum++;
 	fileName = pci->wavename;
