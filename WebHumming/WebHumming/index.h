@@ -36,6 +36,11 @@ int IndexPitchToLSHVector(map<string , vector<float>> &indexSongName,
 	int StepFactor, int LSHsize, int LSHshift, int maxFrame, 
 	vector<vector<float>> &LSHVector, map<unsigned long , pair<string,short>> &IndexLSH);
 
+//从一维音高序列抽取NLSH点
+int IndexPitchToLSHVectorNote(map<string , vector<float>> &indexSongName, 
+	int noteMaxFrame, int NLSHsize, int maxFrame, 
+	vector<vector<float>> &LSHVector, map<unsigned long , pair<string,pair<short,short>>> &IndexLSH);
+
 int QueryPitchToLSHVectorLinearStretchingShortToMore(vector <float> &queryPitch,vector <vector<vector<float>>> &LSHQueryVectorLinearStretching,
 													 float FloorLevel, float UpperLimit,int stepFactor,float stepRatio,float StretchStep,int recur);
 
@@ -54,11 +59,6 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALL(vector<IntT> &IndexCandida
 													  map<string , vector<float>> &indexSongName,vector <string> &SongNameMapToDataY,
 													  int &CandidatesSizeInDWT,int MatchBeginPos,map <string , short > &SongMapPosition,
 													  map <string , vector<pair<short, double>> > &SongMapPositionAll,int offsetbegin, int offsetLength);
-
-//从一维音高序列抽取基于音符的LSH点
-int IndexPitchToLSHVectorNote(map<string , vector<float>> &indexSongName, 
-	int noteMaxFrame, int NLSHsize, int maxFrame, 
-	vector<vector<float>> &LSHVector, map<unsigned long , pair<string,pair<short,short>>> &IndexLSH);
 
 int QueryPitchToLSHVectorLinearStretchingShortToMoreNote(vector<pair<short, short>>& posPairvector, vector <float> &queryPitch,vector <vector <vector<float>>> &LSHQueryVectorLinearStretching,
 														 float FloorLevel, float UpperLimit,int stepFactor,float stepRatio,float StretchStep);

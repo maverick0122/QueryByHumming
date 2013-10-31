@@ -4,7 +4,7 @@
 
 const int inf=100000;
 const int Dpenalty=0.0;
-const int emdLength=23000; //匹配5.5秒长度的EMD
+const int emdLength=23000; //匹配5.5秒长度的EMD，哼唱音高序列的帧数上限
 const double penalty=0;
 const double disConst=4.0;
 const double disConstString=4.0;//RA的固定常数  原始是16
@@ -43,30 +43,9 @@ double MyMin(double a, double b, double c)
 	return min;
 }
 
-//求两数最小值
-double MyMinTwo(double a, double b)
-{
-	return a<b?a:b;
-}
-
-
 bool sortRule(const pair<float,int>& s1, const pair<float,int>& s2) 
 {
   return s1.first < s2.first;
-}
-
-int MyMinTwoInt(int a, int b)
-{
-	int min;
-	if (a<b)
-	{
-		min=a;
-	}
-	else
-	{
-		min=b;
-	}
-	return min;
 }
 
 double MyDistance(double &a, double &b)
@@ -80,7 +59,7 @@ double MyDistance(double &a, double &b)
 double PitchDistance(vector<vector<double>> &a, vector<vector<double>> &b)
 {
 	int i,j,m,n,k;
-	m=MyMinTwoInt(a.size(),b.size());
+	m = MyMinTwo(a.size(),b.size());
 	if (m>0)
 	{
 		n=a[0].size();
@@ -114,44 +93,6 @@ void NoZero( vector<float>  &x)
 			iter++;
 	}
 }
-
-
-void NoZeroOldtow(vector< vector<double> > &x)
-{
-	double mean=0;
-	int m=x.size();
-	int n=x[m-1].size();
-	int i,j;
-	int Nozero=0;
-	int vec=0;
-
-	for (i=0;i<m;i++)
-	{
-		for (j=0;j<n;j++)
-		{
-			if(x[i][j]!=0)
-			{
-				;
-			}
-			else
-			{
-				x[i].erase(x[i].begin()+j);
-			}
-		}
-	}
-	vector <vector <double>>::iterator iter=x.begin();
-	for (;iter!=x.end();)
-	{
-		if (iter->empty())
-		{
-			x.erase(iter);
-			iter=x.begin();
-		}
-		else
-			iter++;
-	}
-}
-
 
 
 void ZeroToForwardThreshold(vector< vector<double> > &x , int BeginFrame)
@@ -713,7 +654,6 @@ void MeanInt(vector< vector<double> > &x)
 		{
 			mean+=x[j][i]/(m-16);
 		}
-		//mean=int(mean+0.5);
 		XMean.push_back(mean);
 	}
 	for (i=0;i<m;i++)
@@ -784,13 +724,13 @@ float MeanPlus( vector<float>  &x, float plus)
 	return mean;
 }
 
-float Mean( vector<float>  &x)
+//减均值操作，减均值后>12就-12，<-12就+12
+float MinusMeanSmooth(vector<float> &x)
 {
 	float mean=0;
 	int m=x.size();
-	int Nozero=0;
 	int i,j;
-	mean=0;
+
 	for (j=0;j<m;j++)
 	{
 	    mean+=x[j]/m;
@@ -957,7 +897,7 @@ void MeanBefor8AndAfter8(vector< vector<double> > &x)
 }
 
 //减均值
-void MeanDimentionLSH(vector<float> &x)
+void MinusMean(vector<float> &x)
 {
 	float mean=0;
 	int m=x.size();
@@ -1116,7 +1056,7 @@ void Var(vector< vector<double> > &x)
 }
 
 //减均值操作。最多计算前thd帧的均值
-void Mean8Minutes(vector<float>  &x, int thd)
+void MinusMeanWithThd(vector<float>  &x, int thd)
 {
 	double mean=0;
 	int m=x.size();
@@ -1774,29 +1714,28 @@ int PitchToTone(vector <vector <double>> &queryPitch)
 	return 0;
 }
 
+//音高序列转换为半音音符序列
 int realPitchToToneShengda(vector <float> &queryPitch)
 {
-	int n=queryPitch.size();
-	float pitchnum=0;
-	static int numpitchall=0;
+	int n = queryPitch.size();
+	float pitchnum = 0;
 	for (int i=0;i!=n;i++)
 	{
 		if (queryPitch[i]!=0)
 		{
-
-			pitchnum=queryPitch[i];
-            pitchnum=(12.0f*(pitchnum-log(440.0f)/log(2.0f))+69.0f);
-			queryPitch[i]=pitchnum;
+			pitchnum = queryPitch[i];
+            pitchnum = (12.0f*(pitchnum-log(440.0f)/log(2.0f))+69.0f);
+			queryPitch[i] = pitchnum;
 		}
 	}
 	return 0;
 }
 
+
 int realPitchToTone(vector <float> &queryPitch)
 {
 	int n=queryPitch.size();
 	float pitchnum=0;
-	static int numpitchall=0;
 	for (int i=0;i!=n;i++)
 	{
 		if (queryPitch[i]!=0)
@@ -1814,7 +1753,6 @@ int realPitchToThreeTone(vector <vector <double>> &queryPitch,vector <vector <do
 {
 	int n=queryPitch.size();
 	double pitchnum=0;
-	static int numpitchall=0;
 	for (int i=0;i!=n;i++)
 	{
 		queryPitchTow.push_back(queryPitch[i]);
@@ -1841,7 +1779,6 @@ int realPitchToAnotherTowTone(vector <vector <double>> &queryPitch,vector <vecto
 {
 	int n=queryPitch.size();
 	double pitchnum=0;
-	static int numpitchall=0;
 	for (int i=0;i!=n;i++)
 	{
 		queryPitchTow.push_back(queryPitch[i]);
@@ -1868,7 +1805,6 @@ int ToneTorealPitch(vector <vector <double>> &queryPitch)
 {
 	int n=queryPitch.size();
 	double pitchnum=0;
-	static int numpitchall=0;
 	for (int i=0;i!=n;i++)
 	{
 		if (queryPitch[i][0]!=0)
@@ -2343,7 +2279,7 @@ void StringTosignature(vector<float>  &dataY,  signature_t  &Y)
 {
 	int n=dataY.size();
 	int m=emdLength;
-	n=MyMinTwoInt(n,m);
+	n=MyMinTwo(n,m);
 	int num=1;
 	for (int i=0;i<n-1 ;i++)
 	{
@@ -2483,6 +2419,16 @@ float MeanLSH(vector<float> &x)
 
 }
 
+//将float数组复制到vector中
+void FloatCopyToVector(vector <float> &des, float *src, int len)
+{
+	for (int i=0; i<len; i++)
+	{
+		des.push_back(src[i]);	
+	}
+}
+
+
 //查询函数：
 //输入：wavename,查询文件路径，param,参数信息
 //输出：songFive，查询结果
@@ -2531,81 +2477,83 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 	static double totalRATime = 0;
 	static int total = 0;
 
-	vector <float> queryPitch;
-	vector <float> queryPitchNote;
+	//盛大开源代码：特征提取函数所需参数
+	float *pFeaBuf = NULL;	//音高序列
+	int nFeaLen = 0;	//音高序列长度
+	SNote *QueryNotes = NULL;	//音符序列
+	int nNoteLen = 0;	//音符序列长度
+	float ratio = 0.5;	//后处理重采样音高序列的比例参数
+
+	vector <float> queryPitch;	//pFeaBuf直接转换的音高序列
+	vector <float> queryPitchNote;	//QueryNotes转换的一维音符序列
 	map<float ,string> songDis;
 	
+	feature_t * NoteEmd = NULL;	//记录减均值后的音符，以音符为单位
+	float * NoteDuration = NULL;	//记录每个音符持续帧数
+
+	signature_t query;	//记录音符长度，减均值后的音符，每个音符持续帧数
+	static int shengdaPitch = 0;	//记录特征提取次数
 	vector <float> Dis;
 	bool returnN = false;
-	float *pFeaBuf = NULL;
-	int nFeaLen = 0;
-	SNote *QueryNotes = NULL;
-	int nNoteLen = 0;
-	float pitchNum = 0;
-	static int shengdaPitch = 0;
 	static int enhance = 0;
-	signature_t query;
 
-	feature_t * NoteEmd=NULL;
-	float * NoteDuration=NULL;	
+	//盛大开源代码：特征提取函数，提取wav中的基于帧和音高的旋律特征
+	//输入：filename：wav文件路径
+	//ratio：后处理重采样音高序列的比例参数
+	//输出：pFeaBuf：音高序列，nFeaLen：音高序列长度
+	//Query：音符序列，nNoteLen：音符序列长度
+	//返回值：0：正常，ERROR_CODE_TOO_SHORT_INPUT：音高序列长度小于20，此时pFeaBuf为空
+	int reNum = SMelodyFeatureExtraction(wavename,pFeaBuf,nFeaLen,QueryNotes,nNoteLen,ratio);
 
-	int reNum = SMelodyFeatureExtraction(wavename,pFeaBuf,nFeaLen,QueryNotes,nNoteLen,0.5);
-
-	if (reNum!=ERROR_CODE_TOO_SHORT_INPUT)
+	if (reNum != ERROR_CODE_TOO_SHORT_INPUT)	//提取的音高序列长度不小于20
 	{
-		shengdaPitch++;
-		for (int i=0;i<nFeaLen;i++)
-		{
-			pitchNum=*(pFeaBuf+i);
-			queryPitch.push_back(pitchNum);	//用原始基频
-		}
-		int emdl=MyMinTwoInt(nFeaLen,emdLength);
-		int lengC=0;
-		int lengNote=0;
-		realPitchToToneShengda(queryPitch);
-		float meanNote=Mean(queryPitch);
-		NoteEmd=(feature_t *)malloc(nNoteLen*sizeof(feature_t));
-		NoteDuration=(float *)malloc(nNoteLen*sizeof(float));
+		shengdaPitch++;	//记录特征提取次数
+		FloatCopyToVector(queryPitch,pFeaBuf,nFeaLen);	//原始音高序列拷贝到vector中
+
+		int emdl = MyMinTwo(nFeaLen,emdLength);	//音高序列帧数，emdLength为哼唱音高序列的帧数上限
+		int lengC = 0;	//记录音符序列总帧数
+		int lengNote = 0;	//记录实际音符序列长度
+
+		realPitchToToneShengda(queryPitch);	//音高序列转换为半音音符序列
+
+		float meanNote = MinusMeanSmooth(queryPitch);	//减均值操作，减均值后>12就-12，<-12就+12，返回均值
+		
+		NoteEmd = (feature_t *)malloc(nNoteLen*sizeof(feature_t));	//记录减均值后的音符，以音符为单位
+		NoteDuration = (float *)malloc(nNoteLen*sizeof(float));	//记录每个音符持续帧数
+
 		for (int i=0;i<nNoteLen;i++)
 		{
-			lengNote++;
-			if (QueryNotes[i].fNoteValue!=0)
-			{
-				*(NoteEmd+i)=QueryNotes[i].fNoteValue-meanNote;
-				for (int j=0;j<QueryNotes[i].fNoteDuration;j++)
-				{
-					queryPitchNote.push_back(QueryNotes[i].fNoteValue-meanNote);
-				}
-			}
-			else
-			{
-				*(NoteEmd+i)=QueryNotes[i].fNoteValue;
-				for (int j=0;j<QueryNotes[i].fNoteDuration;j++)
-				{
-					queryPitchNote.push_back(QueryNotes[i].fNoteValue);
-				}
-			}
-			if (lengC+QueryNotes[i].fNoteDuration<=emdLength)
-			{
-				*(NoteDuration+i)=QueryNotes[i].fNoteDuration;
-			}
-			else
-				*(NoteDuration+i)=QueryNotes[i].fNoteDuration-(emdLength-lengC);
-			lengC+=QueryNotes[i].fNoteDuration;
-			if (lengC>=emdl)
-			{
-				i+=nNoteLen;
-			}
+			lengNote++;	//记录实际音符序列长度
+
+			if (QueryNotes[i].fNoteValue != 0)	//音符值不为零
+				NoteEmd[i] = QueryNotes[i].fNoteValue - meanNote;	//记录减均值的音符
+			else	//音符值为零
+				NoteEmd[i] = QueryNotes[i].fNoteValue;	//直接记录，不减均值
+
+			//转换为一维音符序列
+			for (int j=0;j<QueryNotes[i].fNoteDuration;j++)	
+				queryPitchNote.push_back(NoteEmd[i]);
+
+			//记录每个音符持续帧数
+			if (lengC+QueryNotes[i].fNoteDuration <= emdLength)	//音符序列帧数未超过音高序列帧数，直接记录
+				NoteDuration[i] = QueryNotes[i].fNoteDuration;
+			else	//音符序列帧数超过音高序列帧数，调整最后一个音符持续帧数
+				NoteDuration[i] = QueryNotes[i].fNoteDuration-(emdLength-lengC);
+
+			lengC += QueryNotes[i].fNoteDuration;
+
+			if (lengC >= emdl) break;	//音符序列帧数超过音高序列帧数，跳出
 		}
-		query.n=lengNote;
-		query.Features=NoteEmd;
-		query.Weights=NoteDuration;
+		query.n = lengNote;	//记录音符长度
+		query.Features = NoteEmd;	//记录减均值后的音符，以音符为单位
+		query.Weights = NoteDuration;	//记录每个音符持续帧数
 	}
-	ofstream shengdaTimes("wav.result",ofstream::app);//LSH时间
-	shengdaTimes<<"盛大提取次数："<<shengdaPitch<< endl;
+	ofstream shengdaTimes("wav.result",ofstream::app);	//追加打开文件
+	shengdaTimes<<"盛大提取次数："<<shengdaPitch<< endl;	//输出是第几次提取
 	shengdaTimes.close();
 
-	if(NULL!=pFeaBuf){
+	//释放pFeaBuf和QueryNotes空间
+	if(NULL != pFeaBuf){
 		delete[] pFeaBuf;
 		pFeaBuf=NULL;
 	}
@@ -2614,112 +2562,6 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 		QueryNotes=NULL;
 	}
 
-	if (reNum==10)
-	{
-		string enhanceS("SpeechEnhance.exe ");
-		string pitchname(wavename);
-		string::size_type enditer=0;
-		enditer=pitchname.rfind(".wav");
-		string nameSong;
-		nameSong.assign(pitchname,enditer-5,9);
-		char buffer[30];
-
-		enhance++;
-		string num=(itoa(enhance,buffer,10));
-		nameSong=num+nameSong;
-		num=(itoa(rand(),buffer,10));
-		nameSong=num+nameSong;
-		num=(itoa(rand(),buffer,10));
-		nameSong=num+nameSong;
-		char filename[300];
-		strcpy(filename,nameSong.c_str());
-		string cmd=enhanceS+pitchname+" "+filename+" "+"2";
-		system(cmd.c_str());
-		reNum=SMelodyFeatureExtraction(filename,pFeaBuf,nFeaLen,QueryNotes,nNoteLen,0.3);
-		cmd="del ";
-		cmd+=nameSong;
-		system(cmd.c_str());
-		ofstream shengdaTimes("wav.result",ofstream::app);//LSH时间
-		shengdaTimes<<"降噪次数："<<enhance<< endl;
-		cout<<"降噪次数："<<enhance<< endl;
-		shengdaTimes.close();
-		if (reNum!=ERROR_CODE_TOO_SHORT_INPUT)
-		{
-			shengdaPitch++;
-			for (int i=0;i<nFeaLen;i++)
-			{
-				pitchNum=*(pFeaBuf+i);
-				queryPitch.push_back(pitchNum);//用原始基频
-			}
-			int emdl=MyMinTwoInt(nFeaLen,emdLength);
-			int lengC=0;
-			int lengNote=0;
-			realPitchToToneShengda(queryPitch);
-			float meanNote=Mean(queryPitch);
-			NoteEmd=(float *)malloc(nNoteLen*sizeof(feature_t));
-			NoteDuration=(float *)malloc(nNoteLen*sizeof(float));
-			for (int i=0;i<nNoteLen;i++)
-			{
-				lengNote++;
-				if (QueryNotes[i].fNoteValue!=0)
-				{
-					*(NoteEmd+i)=QueryNotes[i].fNoteValue-meanNote;
-					for (int j=0;j<QueryNotes[i].fNoteDuration;j++)
-					{
-						queryPitchNote.push_back(QueryNotes[i].fNoteValue-meanNote);
-					}
-				}
-				else
-				{
-					*(NoteEmd+i)=QueryNotes[i].fNoteValue;
-					for (int j=0;j<QueryNotes[i].fNoteDuration;j++)
-					{
-						queryPitchNote.push_back(QueryNotes[i].fNoteValue);
-					}
-				}
-				if (lengC+QueryNotes[i].fNoteDuration<=emdLength)
-				{
-					*(NoteDuration+i)=QueryNotes[i].fNoteDuration;
-				}
-				else
-					*(NoteDuration+i)=QueryNotes[i].fNoteDuration-(emdLength-lengC);
-				lengC+=QueryNotes[i].fNoteDuration;
-				if (lengC>=emdl)
-				{
-					i+=nNoteLen;
-				}
-
-
-			}
-			query.n=lengNote;
-			query.Features=NoteEmd;
-			query.Weights=NoteDuration;
-		}
-		if(NULL!=pFeaBuf){
-			delete[] pFeaBuf;
-			pFeaBuf=NULL;
-		}
-		if(NULL!=QueryNotes){
-			delete[] QueryNotes;
-			QueryNotes=NULL;
-		}
-	}
-
-
-	if (reNum==10)
-	{
-
-		int beginHummingFrame=charToVector(wavename,queryPitch);
-		realPitchToTone(queryPitch);
-		ZeroToForwardThresholdAndLongZeroToHalfBefor(queryPitch,beginHummingFrame);
-		smooth(queryPitch);
-		VectorSmoothToHalf(queryPitch);
-		smooth(queryPitch);
-		Mean(queryPitch);
-		query.n=0;
-		query.Features=NULL;
-		query.Weights=NULL;
-	}
 	signature_t candiY;
 
 	candiY.Features=(feature_t *) malloc((MAX_SIG_SIZE-1)*sizeof(feature_t));
@@ -3007,8 +2849,8 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 				OneSongLSHTime=(double)(lastTime-firstTimeTempLSH1)/CLOCKS_PER_SEC;
 				totalLSHRetrievalPostProcessPitchTimeNote+=OneSongLSHTime;
 				int sizeCandidates=SongNameMapToDataY.size();
-				Mean(queryPitchNote);
-				Mean(queryStretchPitch);
+				MinusMeanSmooth(queryPitchNote);
+				MinusMeanSmooth(queryStretchPitch);
 
 				int numLSH=0;
 				int thresholdMatch=0;
@@ -3023,7 +2865,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 						numLSH=LSHFilterMap[SongNameMapToDataY[i]];
 						if (numLSH>thresholdMatch)
 						{
-							Mean(CandidatesDataY[i]);
+							MinusMeanSmooth(CandidatesDataY[i]);
 							vector <float> candidat;
 							float pitch_query=0;
 							int left=0;
@@ -3074,7 +2916,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 
 						if (numLSH>thresholdMatch)
 						{
-							Mean(CandidatesDataY[i]);
+							MinusMeanSmooth(CandidatesDataY[i]);
 							int QuerySize=queryStretchPitch.size();
 							int DataYSize=CandidatesDataY[i].size();
 							int sizeQandD=CandidatesDataY[i].size();
@@ -3418,8 +3260,8 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 #endif	 
 
 				int sizeCandidates=SongNameMapToDataY.size();
-				Mean(queryPitchNote);
-				Mean(queryStretchPitch);
+				MinusMeanSmooth(queryPitchNote);
+				MinusMeanSmooth(queryStretchPitch);
 				int numLSH=0;
 				int thresholdMatch=0;
 
@@ -3428,7 +3270,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 				vector <float> DisLSOriginal;
 				for (int i=0;i<sizeCandidates;i++)
 				{
-					Mean(CandidatesDataY[i]);
+					MinusMeanSmooth(CandidatesDataY[i]);
 					vector <float> candidat;
 					float pitch_query=0;
 					int left=0;
@@ -3467,7 +3309,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 
 					if ( LSResult.count(i))
 					{
-						Mean(CandidatesDataY[i]);
+						MinusMeanSmooth(CandidatesDataY[i]);
 						int QuerySize=queryStretchPitch.size();
 						int DataYSize=CandidatesDataY[i].size();
 						int sizeQandD=CandidatesDataY[i].size();

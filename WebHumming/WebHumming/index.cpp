@@ -389,7 +389,7 @@ int readIndexPitch8MinutesNewPv(string dataIndex, map<string , vector<float>> &i
 
 		NoZero(database);	//去除序列中的零值
 		smooth(database);	//用五点中值法平滑，窗长为5，窗移为1
-		Mean8Minutes(database,max_mean_thd);		//减均值操作。最多计算前max_mean_thd帧的均值
+		MinusMeanWithThd(database,max_mean_thd);		//减均值操作。最多计算前max_mean_thd帧的均值
 
 		indexSongName.insert(make_pair(songName,database));	//将pv文件名和一维音高序列插入输出变量
 
@@ -619,7 +619,7 @@ int IndexPitchToLSHVector(map<string , vector<float>> &indexSongName,
 				LSHVectorDimention.push_back(temp[StepFactor/2]);	
 			}
 
-			MeanDimentionLSH(LSHVectorDimention);		//减均值
+			MinusMean(LSHVectorDimention);		//减均值
 			LSHVector.push_back(LSHVectorDimention);	//加入LSH点集
 		}
 	}
@@ -968,7 +968,7 @@ int QueryPitchToLSHVectorLinearStretchingShortToMore(vector <float> &queryPitch,
 				LSHVector20Dimention.push_back(temp[stepFactor/2]);
 				//LSHVector20Dimention.push_back(queryPitchStretch[i][0]);
 			}
-			MeanDimentionLSH(LSHVector20Dimention);
+			MinusMean(LSHVector20Dimention);
 			OneSongPoint++;
 			LSHQueryVectorOneStretch.push_back(LSHVector20Dimention);
 		}
