@@ -141,4 +141,7 @@ double RAPositionVarianceOptimal( vector<double>  &queryX,  vector<double>  &dat
 float Mean( vector<float>::iterator  Ybegin,  vector<float>::iterator  Yend);
 float MeanLSH(vector<float> &x);	//计算均值
 void MeanNoteLSH(vector<float> &x, float mean);	//减均值
+
+void PRNearNeighborStructTCopy(PRNearNeighborStructT des,PRNearNeighborStructT src);	//RNN数据结构复制
+
 #endif

@@ -41,9 +41,6 @@ typedef struct
 }ParamInfo, *pParamInfo;
 
 _declspec(dllexport) void songread(string IDAndNameFile,map <string ,string> &songIDAndName);
-//int indexRead(ParamInfo *param,map <string ,string> &songIDAndName);
-_declspec(dllexport) int indexRead(ParamInfo *param,map <string ,string> &songIDAndName,PRNearNeighborStructT& IndexHumingLocal,PRNearNeighborStructT& IndexHumingLocalNote);
-_declspec(dllexport) int WavToSongFive (char *wavename,map<string , vector<float>> &indexSongName,PRNearNeighborStructT &IndexHuming,PRNearNeighborStructT &IndexHumingNote,
-								map<unsigned long , pair<string,short>> &IndexLSH,map<unsigned long , pair<string,pair<short,short>>> &IndexLSHNote,
-								int stepFactor,IntT RetainNum,IntT RetainNumNote,IntT LSHFilterNum,IntT LSHFilterNumNote,float stepRatioP,vector<string>& songFive);
+_declspec(dllexport) int indexRead(ParamInfo *param,map <string ,string> &songIDAndName);
+_declspec(dllexport) int WavToSongFive(char *wavename,ParamInfo *param,vector<string>& songFive);
 #endif

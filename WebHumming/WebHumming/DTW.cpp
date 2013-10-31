@@ -2483,55 +2483,73 @@ float MeanLSH(vector<float> &x)
 
 }
 
-int WavToSongFive (char *wavename,map<string , vector<float>> &indexSongName,PRNearNeighborStructT &IndexHuming,PRNearNeighborStructT &IndexHumingNote,
-								map<unsigned long , pair<string,short>> &IndexLSH,map<unsigned long , pair<string,pair<short,short>>> &IndexLSHNote,
-								int stepFactor,IntT RetainNum,IntT RetainNumNote,IntT LSHFilterNum,IntT LSHFilterNumNote,float stepRatioP,vector<string>& songFive)
+//查询函数：
+//输入：wavename,查询文件路径，param,参数信息
+//输出：songFive，查询结果
+int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 {
+	//从参数结构体param中提取查询用到的参数
+	ParamInfo *pci = param;	//LSH参数结构体
+	ParamInfo *pciNote = param+1;	//NLSH参数结构体
 
-	float stepRatio=stepRatioP;
-	clock_t firstTime,lastTime,firstTimeTemp,lastTimeTemp,firstTimeTempLSH1,lastTimeTempLSH1,firstTimeTempLSH2,lastTimeTempLSH2;
-	double OneSongLSHTime=0;
-	static double totalLSHTime=0;
-	double OneSongLSTime=0;
-	static double totalLSTime=0;
-	double OneSonglshnoteTime=0;
-	static double totalLSHNoteTime=0;
-	double OneSonglshPitchTime=0;
-	static double totalLSHOnlyNoteTime=0;
-	static double totalLSHOnlyPitchTime=0;
-	static double totalLSHRetrievalPostProcessPitchTime=0;
-	static double totalLSHRetrievalPostProcessPitchTimeNote=0;
-	static double totalLSHPitchTime=0;
-	static double totalLSHPitchFirstTime=0;
-	static double totalLSHNoteFirstTime=0;
-	static double totalLSHoneTime=0;
-	static double totalLSHtwoTime=0;
-	static double totalLSHthreeTime=0;
-	double OneSongEMDTime=0;
-	static double totalEMDTime=0;
-	double OneSongRATime=0;
-	static double totalRATime=0;
-	static int total=0;
+	map<string,vector<float>> indexSongName(pci->indexSongName);	//索引pv文件路径和对应的一维音高序列
+	PRNearNeighborStructT IndexHuming = pci->IndexHuming;	//LSH点的RNN索引
+	PRNearNeighborStructT IndexHumingNote = pciNote->IndexHuming;	//NLSH点的RNN索引
+	map<unsigned long,pair<string,short>> IndexLSH(pci->IndexLSH);	//LSH索引，记录LSH点的序号，带路径的文件名，起始位置
+	map<unsigned long,pair<string,pair<short,short>>> IndexLSHNote(pciNote->IndexLSHNote);	//NLSH索引，记录NLSH点的序号，带路径的文件名，起始位置，持续帧数
+	int stepFactor = pci->stepFactor;	//选择LSH点的间隔数（间隔几个点抽取一个点）
+	IntT RetainNum = pci->RetainNum;		//LSH每个点仅保留的点数
+	IntT RetainNumNote = pciNote->RetainNum;	//NLSH每个点仅保留的点数
+	IntT LSHFilterNum = pci->LSHFilterNum;	//LSH滤波保留的点数
+	IntT LSHFilterNumNote = pciNote->LSHFilterNum;	//LSH滤波保留的点数
+	float stepRatio = pci->stepRatio;	//query的LSH变换帧移
+	songFive.clear();	//查询结果清零
+
+	//统计时间相关变量
+	clock_t firstTime,lastTime,firstTimeTemp,lastTimeTemp,firstTimeTempLSH1,
+		lastTimeTempLSH1,firstTimeTempLSH2,lastTimeTempLSH2;
+	double OneSongLSHTime = 0;
+	static double totalLSHTime = 0;
+	double OneSongLSTime = 0;
+	static double totalLSTime = 0;
+	double OneSonglshnoteTime = 0;
+	static double totalLSHNoteTime = 0;
+	double OneSonglshPitchTime = 0;
+	static double totalLSHOnlyNoteTime = 0;
+	static double totalLSHOnlyPitchTime = 0;
+	static double totalLSHRetrievalPostProcessPitchTime = 0;
+	static double totalLSHRetrievalPostProcessPitchTimeNote = 0;
+	static double totalLSHPitchTime = 0;
+	static double totalLSHPitchFirstTime = 0;
+	static double totalLSHNoteFirstTime = 0;
+	static double totalLSHoneTime = 0;
+	static double totalLSHtwoTime = 0;
+	static double totalLSHthreeTime = 0;
+	double OneSongEMDTime = 0;
+	static double totalEMDTime = 0;
+	double OneSongRATime = 0;
+	static double totalRATime = 0;
+	static int total = 0;
+
 	vector <float> queryPitch;
 	vector <float> queryPitchNote;
 	map<float ,string> songDis;
-	songFive.clear();
+	
 	vector <float> Dis;
-	bool returnN=false;
+	bool returnN = false;
 	float *pFeaBuf = NULL;
 	int nFeaLen = 0;
-	SNote *QueryNotes= NULL;
-	int nNoteLen=0;
-	float pitchNum=0;
-	static int shengdaPitch=0;
-	static int enhance=0;
+	SNote *QueryNotes = NULL;
+	int nNoteLen = 0;
+	float pitchNum = 0;
+	static int shengdaPitch = 0;
+	static int enhance = 0;
 	signature_t query;
 
 	feature_t * NoteEmd=NULL;
-	float * NoteDuration=NULL;
+	float * NoteDuration=NULL;	
 
-
-	int reNum=SMelodyFeatureExtraction(wavename,pFeaBuf,nFeaLen,QueryNotes,nNoteLen,0.5);
+	int reNum = SMelodyFeatureExtraction(wavename,pFeaBuf,nFeaLen,QueryNotes,nNoteLen,0.5);
 
 	if (reNum!=ERROR_CODE_TOO_SHORT_INPUT)
 	{
@@ -2539,7 +2557,7 @@ int WavToSongFive (char *wavename,map<string , vector<float>> &indexSongName,PRN
 		for (int i=0;i<nFeaLen;i++)
 		{
 			pitchNum=*(pFeaBuf+i);
-			queryPitch.push_back(pitchNum);//用原始基频
+			queryPitch.push_back(pitchNum);	//用原始基频
 		}
 		int emdl=MyMinTwoInt(nFeaLen,emdLength);
 		int lengC=0;
@@ -2578,13 +2596,10 @@ int WavToSongFive (char *wavename,map<string , vector<float>> &indexSongName,PRN
 			{
 				i+=nNoteLen;
 			}
-			
-
 		}
 		query.n=lengNote;
 		query.Features=NoteEmd;
 		query.Weights=NoteDuration;
-
 	}
 	ofstream shengdaTimes("wav.result",ofstream::app);//LSH时间
 	shengdaTimes<<"盛大提取次数："<<shengdaPitch<< endl;
@@ -3716,10 +3731,7 @@ int WavToSongFive (char *wavename,map<string , vector<float>> &indexSongName,PRN
 //参数均为输出参数，输入为5000newpv355.txt 中的pv文件，建立索引（文件需在程序运行目录/5355P文件夹中）
 //输出：param，参数信息
 //songIDAndName，歌曲ID和歌名映射
-//IndexHumingLocal，基于帧的索引
-//IndexHumingLocalNote，基于音符的索引
-int indexRead(ParamInfo *param,	map <string ,string> &songIDAndName,
-	PRNearNeighborStructT& IndexHumingLocal, PRNearNeighborStructT& IndexHumingLocalNote)
+int indexRead(ParamInfo *param,	map <string ,string> &songIDAndName)
 {
 	string fileName("wavall355.txt");	
 
@@ -3746,8 +3758,9 @@ int indexRead(ParamInfo *param,	map <string ,string> &songIDAndName,
 	int noteMaxFrame = 10;	//一个音高的最长帧数（超过则切分）
 	int NLSHsize = 10;	//NLSH窗长，一个LSH点的大小
 
-	PPointT *dataSet=NULL; 
-	PPointT *dataSetNote=NULL; 
+	//存储LSH点的中间变量
+	PPointT *dataSet=NULL;	//存储LSH点，用于建立IndexHumming数据结构
+	PPointT *dataSetNote=NULL;	//存储NLSH点，用于建立IndexHumming数据结构
 
 	IntT RetainNum=3;	//每个点仅保留的点数
 	float stepRatio=1.5;	//query的LSH变换帧移
@@ -3767,7 +3780,7 @@ int indexRead(ParamInfo *param,	map <string ,string> &songIDAndName,
 
 	//读入pv文件，将二维的(音符，持续时间)序列转化为一维音符序列
 	//输入：dataIndex: 索引音符列表文件
-	//输出：indexSongName: 文件路径（5355P\\XXX.pv）和对应pv文件的一维音符序列的map
+	//输出：indexSongName: 文件路径（5355P\\XXX.pv）和对应pv文件的一维音符序列
 	readIndexPitch8MinutesNewPv(dataIndex, param[0].indexSongName);	
 
 	//从一维音高序列抽取LSH点，去除了匹配开头的功能
@@ -3776,8 +3789,8 @@ int indexRead(ParamInfo *param,	map <string ,string> &songIDAndName,
 	//LSHsize，LSH窗长，一个LSH点的大小
 	//LSHshift，LSH窗移
 	//maxFrame，一维音高序列最大帧数
-	//输出：LSHVector，记录LSH点，每个点为一个音高序列
-	//IndexLSH,	记录LSH索引向量在LSHVector的序号，带路径的文件名，起始音高位置
+	//输出：LSHVector，LSH点，每个点为一个音高序列
+	//IndexLSH,	LSH索引，记录在LSHVector的序号，带路径的文件名，起始位置
 	IndexPitchToLSHVector(param[0].indexSongName, StepFactor, LSHsize, LSHshift, maxFrame, 
 		LSHVector, param[0].IndexLSH);
 
@@ -3814,7 +3827,7 @@ int indexRead(ParamInfo *param,	map <string ,string> &songIDAndName,
 	//NLSHsize，LSH窗长，一个LSH点的大小
 	//maxFrame，一维音高序列最大帧数
 	//输出：LSHVector，LSH点，每个点为一个10维的音高序列
-	//IndexLSH,	LSH索引，记录在LSHVector的序号，每个LSH点的起始位置，持续帧数
+	//IndexLSH,	NLSH索引，记录在LSHVector的序号，带路径的文件名，起始位置，持续帧数
 	IndexPitchToLSHVectorNote(param[0].indexSongName, noteMaxFrame, NLSHsize, maxFrame, 
 		LSHVector, param[1].IndexLSHNote);
 
@@ -3848,94 +3861,53 @@ int indexRead(ParamInfo *param,	map <string ,string> &songIDAndName,
 
 	string IDAndNameFile = "name.txt";
 	songread(IDAndNameFile,songIDAndName);	//从文件读入歌曲ID和歌名映射表,文件每行为：ID 歌名
-	
-	int totalWave=0;
-	string enhance("SpeechEnhance.exe ");
-	unsigned int threadID[100];	//最多开100个进程
 
-	pParamInfo pci = (ParamInfo*)param;		//获取LSH参数
-	pParamInfo pciNote = (ParamInfo*)param+1; //获取NLSH参数
-	//  do something here
-
-	char buffer[20];
-	clock_t firstTime,lastTime;
-	double OneSongMatchTime=0;
-	static int ThreadCNum=-1;
-
-	ThreadCNum++;
-	fileName = pci->wavename;
-
-	string fileN = fileName + itoa(ThreadCNum,buffer,10);
-	
+	/*
+	//用param初始化输入参数LSH索引
 	FAILIF(NULL == (IndexHumingLocal = (PRNearNeighborStructT)MALLOC(sizeof(RNearNeighborStructT))));
-	IndexHumingLocal->dimension=pci->IndexHuming->dimension;
-	IndexHumingLocal->hashedBuckets=pci->IndexHuming->hashedBuckets;
-	IndexHumingLocal->hfTuplesLength=pci->IndexHuming->hfTuplesLength;
-	IndexHumingLocal->lshFunctions=pci->IndexHuming->lshFunctions;
-	IndexHumingLocal->sizeMarkedPoints=pci->IndexHuming->sizeMarkedPoints;
-	FAILIF(NULL == (IndexHumingLocal->markedPoints = (BooleanT*)MALLOC(IndexHumingLocal->sizeMarkedPoints * sizeof(BooleanT))));
-	for(IntT i = 0; i < IndexHumingLocal->sizeMarkedPoints; i++){
-		IndexHumingLocal->markedPoints[i] = FALSE;
-	}
-	FAILIF(NULL == (IndexHumingLocal->markedPointsIndeces = (Int32T*)MALLOC(IndexHumingLocal->sizeMarkedPoints * sizeof(Int32T))));
-	IndexHumingLocal->nHFTuples=pci->IndexHuming->nHFTuples;
-	IndexHumingLocal->nPoints=pci->IndexHuming->nPoints;
-	IndexHumingLocal->parameterK=pci->IndexHuming->parameterK;
-	IndexHumingLocal->parameterL=pci->IndexHuming->parameterL;
-	IndexHumingLocal->parameterR=pci->IndexHuming->parameterR;
-	IndexHumingLocal->parameterR2=pci->IndexHuming->parameterR2;
-	IndexHumingLocal->parameterT=pci->IndexHuming->parameterT;
-	IndexHumingLocal->parameterW=pci->IndexHuming->parameterW;
-	IndexHumingLocal->points=pci->IndexHuming->points;
-	IndexHumingLocal->pointsArraySize=pci->IndexHuming->pointsArraySize;
-	FAILIF(NULL == (IndexHumingLocal->pointULSHVectors = (Uns32T**)MALLOC(IndexHumingLocal->nHFTuples * sizeof(Uns32T*))));
-	for(IntT i = 0; i < IndexHumingLocal->nHFTuples; i++){
-		FAILIF(NULL == (IndexHumingLocal->pointULSHVectors[i] = (Uns32T*)MALLOC(IndexHumingLocal->hfTuplesLength * sizeof(Uns32T))));
-	}
-	FAILIF(NULL == (IndexHumingLocal->precomputedHashesOfULSHs = (Uns32T**)MALLOC(IndexHumingLocal->nHFTuples * sizeof(Uns32T*))));
-	for(IntT i = 0; i < IndexHumingLocal->nHFTuples; i++){
-		FAILIF(NULL == (IndexHumingLocal->precomputedHashesOfULSHs[i] = (Uns32T*)MALLOC(N_PRECOMPUTED_HASHES_NEEDED * sizeof(Uns32T))));
-	}
-	 FAILIF(NULL == (IndexHumingLocal->reducedPoint = (float*)MALLOC(IndexHumingLocal->dimension * sizeof(float))));
-	IndexHumingLocal->reportingResult=pci->IndexHuming->reportingResult;
-	
-	IndexHumingLocal->useUfunctions=pci->IndexHuming->useUfunctions;
-
+	PRNearNeighborStructTCopy(IndexHumingLocal,param[0].IndexHuming);
 	FAILIF(NULL == (IndexHumingLocalNote = (PRNearNeighborStructT)MALLOC(sizeof(RNearNeighborStructT))));
-	IndexHumingLocalNote->dimension=pciNote->IndexHuming->dimension;
-	IndexHumingLocalNote->hashedBuckets=pciNote->IndexHuming->hashedBuckets;
-	IndexHumingLocalNote->hfTuplesLength=pciNote->IndexHuming->hfTuplesLength;
-	IndexHumingLocalNote->lshFunctions=pciNote->IndexHuming->lshFunctions;
-	IndexHumingLocalNote->sizeMarkedPoints=pciNote->IndexHuming->sizeMarkedPoints;
-	FAILIF(NULL == (IndexHumingLocalNote->markedPoints = (BooleanT*)MALLOC(IndexHumingLocalNote->sizeMarkedPoints * sizeof(BooleanT))));
-	for(IntT i = 0; i < IndexHumingLocalNote->sizeMarkedPoints; i++){
-		IndexHumingLocalNote->markedPoints[i] = FALSE;
-	}
-	FAILIF(NULL == (IndexHumingLocalNote->markedPointsIndeces = (Int32T*)MALLOC(IndexHumingLocalNote->sizeMarkedPoints * sizeof(Int32T))));
-	IndexHumingLocalNote->nHFTuples=pciNote->IndexHuming->nHFTuples;
-	IndexHumingLocalNote->nPoints=pciNote->IndexHuming->nPoints;
-	IndexHumingLocalNote->parameterK=pciNote->IndexHuming->parameterK;
-	IndexHumingLocalNote->parameterL=pciNote->IndexHuming->parameterL;
-	IndexHumingLocalNote->parameterR=pciNote->IndexHuming->parameterR;
-	IndexHumingLocalNote->parameterR2=pciNote->IndexHuming->parameterR2;
-	IndexHumingLocalNote->parameterT=pciNote->IndexHuming->parameterT;
-	IndexHumingLocalNote->parameterW=pciNote->IndexHuming->parameterW;
-	IndexHumingLocalNote->points=pciNote->IndexHuming->points;
-	IndexHumingLocalNote->pointsArraySize=pciNote->IndexHuming->pointsArraySize;
-	FAILIF(NULL == (IndexHumingLocalNote->pointULSHVectors = (Uns32T**)MALLOC(IndexHumingLocalNote->nHFTuples * sizeof(Uns32T*))));
-	for(IntT i = 0; i < IndexHumingLocalNote->nHFTuples; i++){
-		FAILIF(NULL == (IndexHumingLocalNote->pointULSHVectors[i] = (Uns32T*)MALLOC(IndexHumingLocalNote->hfTuplesLength * sizeof(Uns32T))));
-	}
-	FAILIF(NULL == (IndexHumingLocalNote->precomputedHashesOfULSHs = (Uns32T**)MALLOC(IndexHumingLocalNote->nHFTuples * sizeof(Uns32T*))));
-	for(IntT i = 0; i < IndexHumingLocalNote->nHFTuples; i++){
-		FAILIF(NULL == (IndexHumingLocalNote->precomputedHashesOfULSHs[i] = (Uns32T*)MALLOC(N_PRECOMPUTED_HASHES_NEEDED * sizeof(Uns32T))));
-	}
-	FAILIF(NULL == (IndexHumingLocalNote->reducedPoint = (float*)MALLOC(IndexHumingLocalNote->dimension * sizeof(float))));
-	IndexHumingLocalNote->reportingResult=pciNote->IndexHuming->reportingResult;
-
-	IndexHumingLocalNote->useUfunctions=pciNote->IndexHuming->useUfunctions;
-
+	PRNearNeighborStructTCopy(IndexHumingLocalNote,param[1].IndexHuming);
+	*/
 	return 1;
+}
+
+void PRNearNeighborStructTCopy(PRNearNeighborStructT des,PRNearNeighborStructT src)	//RNN数据结构复制
+{
+	des->dimension=src->dimension;
+	des->hashedBuckets=src->hashedBuckets;
+	des->hfTuplesLength=src->hfTuplesLength;
+	des->lshFunctions=src->lshFunctions;
+	des->sizeMarkedPoints=src->sizeMarkedPoints;
+	FAILIF(NULL == (des->markedPoints = (BooleanT*)MALLOC(des->sizeMarkedPoints * sizeof(BooleanT))));
+	for(IntT i = 0; i < des->sizeMarkedPoints; i++)
+	{
+		des->markedPoints[i] = FALSE;
+	}
+	FAILIF(NULL == (des->markedPointsIndeces = (Int32T*)MALLOC(des->sizeMarkedPoints * sizeof(Int32T))));
+	des->nHFTuples=src->nHFTuples;
+	des->nPoints=src->nPoints;
+	des->parameterK=src->parameterK;
+	des->parameterL=src->parameterL;
+	des->parameterR=src->parameterR;
+	des->parameterR2=src->parameterR2;
+	des->parameterT=src->parameterT;
+	des->parameterW=src->parameterW;
+	des->points=src->points;
+	des->pointsArraySize=src->pointsArraySize;
+	FAILIF(NULL == (des->pointULSHVectors = (Uns32T**)MALLOC(des->nHFTuples * sizeof(Uns32T*))));
+	for(IntT i = 0; i < des->nHFTuples; i++)
+	{
+		FAILIF(NULL == (des->pointULSHVectors[i] = (Uns32T*)MALLOC(des->hfTuplesLength * sizeof(Uns32T))));
+	}
+	FAILIF(NULL == (des->precomputedHashesOfULSHs = (Uns32T**)MALLOC(des->nHFTuples * sizeof(Uns32T*))));
+	for(IntT i = 0; i < des->nHFTuples; i++)
+	{
+		FAILIF(NULL == (des->precomputedHashesOfULSHs[i] = (Uns32T*)MALLOC(N_PRECOMPUTED_HASHES_NEEDED * sizeof(Uns32T))));
+	}
+	FAILIF(NULL == (des->reducedPoint = (float*)MALLOC(des->dimension * sizeof(float))));
+	des->reportingResult=src->reportingResult;
+	des->useUfunctions=src->useUfunctions;
 }
 
 
@@ -3967,13 +3939,10 @@ void main()
 {
 	ParamInfo param[2];		//参数信息
 	map <string ,string> songIDAndName;		//歌曲ID和歌名映射表
-	PRNearNeighborStructT IndexHumingLocal;	//索引
-	PRNearNeighborStructT IndexHumingLocalNote;	//基于音符的索引
 	vector<string> songFive;	//存储返回的检索结果
 
 	//参数均为输出参数，输入为5000newpv355.txt 中的pv文件，建立索引（文件需在./5355P文件夹中）
-	indexRead( param,songIDAndName,IndexHumingLocal, IndexHumingLocalNote);
-	int i;
+	indexRead(param,songIDAndName);
 
 	string fileName("query.txt");	//文件每行是一个哼唱wav的路径，即查询集
 	ifstream pitchFile(fileName.c_str());
@@ -3985,25 +3954,30 @@ void main()
 	while(getline(pitchFile,pitchname))	//读取每行的wav路径
 	{
 		char filename[300];		//哼唱wav文件名（含路径）
-		pParamInfo pci = param;	//帧索引和音符索引的参数信息
-		pParamInfo pciNote = param+1; 
-
 		strcpy(filename,pitchname.c_str());
+
+		//查询函数：
+		//输入：filename,查询文件路径，param,参数信息
+		//输出：songFive，查询结果
+		WavToSongFive(filename,param,songFive);
+
+		/*
 		//查询
-		WavToSongFive (filename,
-			param->indexSongName,
-			IndexHumingLocal,
-			IndexHumingLocalNote,
-			pci->IndexLSH,
-			pciNote->IndexLSHNote,
-			pci->stepFactor,
-			pci->RetainNum,
-			pciNote->RetainNum,
-			pci->LSHFilterNum,
-			pciNote->LSHFilterNum,
-			pci->stepRatio,
-			songFive);
-		
+		WavToSongFive (filename,	//查询文件路径
+			pci->indexSongName,	//索引pv文件路径和对应的一维音高序列
+			pci->IndexHuming,//IndexHumingLocal,	//LSH点的RNN索引
+			pciNote->IndexHuming,//IndexHumingLocalNote,	//NLSH点的RNN索引
+			pci->IndexLSH,	//LSH索引，记录LSH点的序号，带路径的文件名，起始位置
+			pciNote->IndexLSHNote,	//NLSH索引，记录NLSH点的序号，起始位置，持续帧数
+			pci->stepFactor,	//选择LSH点的间隔数（间隔几个点抽取一个点）
+			pci->RetainNum,		//每个点仅保留的点数
+			pciNote->RetainNum,	//每个点仅保留的点数
+			pci->LSHFilterNum,	//LSH滤波保留的点数
+			pciNote->LSHFilterNum,	//LSH滤波保留的点数
+			pci->stepRatio,	//query的LSH变换帧移
+			songFive);	//查询结果
+		*/
+
 		//输出结果
 		resultFile<<"query:"<<pitchname<<endl;
 		for (int j=0;j<5 && j<=songFive.size();j++)
@@ -4012,7 +3986,6 @@ void main()
 		}
 		resultFile<<endl;
 	}
-	pitchFile.close();
-	resultFile.close();
-	//return 1;
+	pitchFile.close();	//关闭查询文件流
+	resultFile.close();	//关闭结果文件流
 }

@@ -314,7 +314,7 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALL(vector<IntT> &IndexCandida
 
 //读入pv文件，将二维的(音符，持续时间)序列转化为一维音符序列
 //输入：dataIndex: 索引音符列表文件
-//输出：indexSongName: 文件路径（5355P\\XXX.pv）和对应pv文件的一维音符序列的map
+//输出：indexSongName: 文件路径（5355P\\XXX.pv）和对应pv文件的一维音符序列
 int readIndexPitch8MinutesNewPv(string dataIndex, map<string , vector<float>> &indexSongName)
 {
 	int frames_per_sec = 25;	//每秒的帧数
