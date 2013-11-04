@@ -72,7 +72,7 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 				  map<unsigned long , pair<string,short>> &IndexLSH,map<unsigned long , pair<string,pair<short,short>>> &IndexLSHNote,
 				  float StretchStep,vector<vector<float>> &IndexCandidatesDis);
 
-//抽取一维音高序列的第一个NLSH点
+//抽取一维音高序列的NLSH点
 int QueryPitchToLSHVectorLinearStretchingShortToMoreNoteFirst(vector<pair<short, short>>& posPairvector, 
 	vector <float> &queryPitch,vector <vector <vector<float>>> &LSHQueryVectorLinearStretching,
 	int noteMinFrame,int noteMaxFrame,int NLSHsize);

@@ -2555,11 +2555,13 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 	shengdaTimes.close();
 
 	//释放pFeaBuf和QueryNotes空间
-	if(NULL != pFeaBuf){
+	if(NULL != pFeaBuf)
+	{
 		delete[] pFeaBuf;
 		pFeaBuf=NULL;
 	}
-	if(NULL!=QueryNotes){
+	if(NULL!=QueryNotes)
+	{
 		delete[] QueryNotes;
 		QueryNotes=NULL;
 	}
@@ -2569,10 +2571,11 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 	candiY.Features = (feature_t *) malloc((MAX_SIG_SIZE-1)*sizeof(feature_t));
 	candiY.Weights = (float *) malloc((MAX_SIG_SIZE-1)*sizeof(float));
 	
-	float FloorLevelInitial=0.6;	//初始值
-	float FloorLevel=FloorLevelInitial;
-	float UpperLimit=1.7;
-	float StretchStep=0.1;	//步长其实一直是0.05
+	//LS(线性缩放)参数
+	float FloorLevelInitial=0.6;	//缩放因子初始值
+	float FloorLevel = FloorLevelInitial;	//缩放因子当前值
+	float UpperLimit=1.7;	//缩放因子上限
+	float StretchStep=0.1;	//缩放因子步长
 	int MatchBeginPos=6;	//代表query和dataY相差点数必须在这个1/MatchBeginPos范围之内才进行匹配
 
 	static int CandidatesDTWAll=0;
@@ -2584,6 +2587,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 	vector <float >tempDis1;
 	vector <float >tempDis2;
 	vector <float >tempDis3;
+
 	for (int recur=0;recur<3;recur++)
 	{
 		if (recur==0)
@@ -2603,12 +2607,12 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 		vector<pair<short, short>> posPair;
 		if (recur==0)
 		{
-			FloorLevelInitial=1;//初始值
-			FloorLevel=FloorLevelInitial;
-			StretchStep=0.1;
-			UpperLimit=1;
+			FloorLevelInitial = 1;	//初始值
+			FloorLevel = FloorLevelInitial;
+			StretchStep = 0.1;
+			UpperLimit = 1;
 
-			//抽取一维音高序列的第一个NLSH点
+			//抽取一维音高序列的NLSH点
 			//输入：queryPitch，查询的一维音符序列
 			//noteMinFrame，音符最短持续帧数，不足则去除
 			//noteMaxFrame，音符最长持续帧数，超过则切分
@@ -2621,7 +2625,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 		}
 		else if (recur==1)
 		{
-			FloorLevelInitial=0.8;//初始值
+			FloorLevelInitial=0.8;	//初始值
 			FloorLevel=FloorLevelInitial;
 			StretchStep=0.2;
 			UpperLimit=1.4;

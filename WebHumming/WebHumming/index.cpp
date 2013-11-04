@@ -670,7 +670,7 @@ PPointT readPointVector(vector<float> &VectorTone)
 }
 
 int QueryPitchToLSHVectorLinearStretchingShortToMoreNote(vector<pair<short, short>>& posPairvector, vector <float> &queryPitch,vector <vector <vector<float>>> &LSHQueryVectorLinearStretching,
-													 float FloorLevel, float UpperLimit,int stepFactor,float stepRatio,float StretchStep)//stepFactor代表20维取点相隔几个点取一个，在原始基频的表示
+	float FloorLevel, float UpperLimit,int stepFactor,float stepRatio,float StretchStep)//stepFactor代表20维取点相隔几个点取一个，在原始基频的表示
 {
 	vector <float> LSHVector20Dimention;
 	vector <vector <float> >LSHQueryVectorOneStretch;//一次伸缩的结果
@@ -774,7 +774,7 @@ int QueryPitchToLSHVectorLinearStretchingShortToMoreNote(vector<pair<short, shor
 			}
 			else
 				pos+=sizeTone;
-			if (oneNoteDuration>=MaxLength)
+			if (oneNoteDuration >= MaxLength)
 			{
 				pos+=MaxLength;
 			} 
@@ -800,7 +800,7 @@ int QueryPitchToLSHVectorLinearStretchingShortToMoreNote(vector<pair<short, shor
 }
 
 
-//抽取一维音高序列的第一个NLSH点
+//抽取一维音高序列的NLSH点
 //输入：queryPitch，查询的一维音符序列
 //noteMinFrame，音符最短持续帧数，不足则去除
 //noteMaxFrame，音符最长持续帧数，超过则切分
@@ -812,7 +812,7 @@ int QueryPitchToLSHVectorLinearStretchingShortToMoreNoteFirst(vector<pair<short,
 	int noteMinFrame,int noteMaxFrame,int NLSHsize)
 {
 	int sizeTone = queryPitch.size();	//一维音符序列长度
-	
+	set<pair<short, short>> posPairTemp;	//记录每个NLSH点的起始位置和持续时间
 	vector <vector <float> >LSHQueryVectorOneStretch;	//一次伸缩的结果
 	long OneSongPoint=0;	//LSH点计数
 	static int numEntry = 0;	//进入此函数计数
@@ -887,11 +887,18 @@ int QueryPitchToLSHVectorLinearStretchingShortToMoreNoteFirst(vector<pair<short,
 		if (LSHVector20Dimention.size()==NLSHsize)	//抽取了一个完整的LSH点
 		{
 			OneSongPoint++;	//LSH点计数
-			posPairvector.push_back(make_pair(pos,frameNow));	//记录当前LSH点的起始位置和持续长度
-			float mean=MeanLSH(temp);	//求当前LSH点内所有帧的均值
-			MeanNoteLSH(LSHVector20Dimention,mean);	//减均值
-			LSHQueryVectorOneStretch.push_back(LSHVector20Dimention);	//加入LSH点集尾
-			break;	//只抽取一维音高序列的第一个NLSH点
+			if (posPairTemp.count(make_pair(pos,frameNow)))	//当前LSH点已存在
+			{
+				;
+			} 
+			else
+			{
+				posPairTemp.push_back(make_pair(pos,frameNow));	//记录当前LSH点的起始位置和持续长度
+				posPairvector.push_back(make_pair(pos,frameNow));	//记录当前LSH点的起始位置和持续长度
+				float mean = MeanLSH(temp);	//求当前LSH点内所有帧的均值
+				MeanNoteLSH(LSHVector20Dimention,mean);	//减均值
+				LSHQueryVectorOneStretch.push_back(LSHVector20Dimention);	//加入LSH点集尾
+			}
 		}
 		else	//当前pv文件抽取不到1个完整的LSH点，跳过
 			break;
@@ -907,15 +914,15 @@ int QueryPitchToLSHVectorLinearStretchingShortToMoreNoteFirst(vector<pair<short,
 		}
 	}
 
-	LSHQueryVectorLinearStretching.push_back(LSHQueryVectorOneStretch);
+	LSHQueryVectorLinearStretching.push_back(LSHQueryVectorOneStretch);	//加入本次抽取的LSH点集
 
-	QueryPoint20Demention += OneSongPoint;	//记录LSH点数（因为每个一维音高序列只抽取第一个LSH点，所以此处为1）
+	QueryPoint20Demention += OneSongPoint;	//记录LSH点数
 
 	if (numEntry%100==0 || numEntry >=330)
 	{
 		ofstream outf("wav.result",ofstream::app);
-		outf<<"当前歌第一个NLSH点数："<<OneSongPoint<<"全部歌曲第一个NLSH点数:"<<QueryPoint20Demention<<endl;
-		cout<<"当前歌第一个NLSH点数："<<OneSongPoint<<"全部歌曲第一个NLSH点数:"<<QueryPoint20Demention<<endl;
+		outf<<"当前歌NLSH点数："<<OneSongPoint<<"全部歌曲NLSH点数:"<<QueryPoint20Demention<<endl;
+		cout<<"当前歌NLSH点数："<<OneSongPoint<<"全部歌曲NLSH点数:"<<QueryPoint20Demention<<endl;
 		outf.close();
 	}
 
