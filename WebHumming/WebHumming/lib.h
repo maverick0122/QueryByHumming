@@ -28,7 +28,7 @@ using namespace std;
 
 
 typedef struct 
-{ 
+{
 	char wavename[300];
 	map<string , vector<float>> indexSongName;
 	PRNearNeighborStructT IndexHuming;
@@ -38,6 +38,11 @@ typedef struct
 	IntT RetainNum;
 	IntT LSHFilterNum;
 	float stepRatio;
+	int LSHsize;
+	int LSHshift;
+	int noteMinFrame;
+	int noteMaxFrame;
+	int maxFrame;
 }ParamInfo, *pParamInfo;
 
 _declspec(dllexport) void songread(string IDAndNameFile,map <string ,string> &songIDAndName);

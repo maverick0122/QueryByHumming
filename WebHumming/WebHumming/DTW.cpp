@@ -2398,6 +2398,7 @@ void MultiFileDel(string fileName,int ThreadNum)
 
 }
 
+//减去指定均值
 void MeanNoteLSH(vector<float> &x, float mean)
 {
 	int m=x.size();
@@ -2407,6 +2408,7 @@ void MeanNoteLSH(vector<float> &x, float mean)
 	} 
 }
 
+//计算均值
 float MeanLSH(vector<float> &x)
 {
 	float mean=0;
@@ -2489,9 +2491,9 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 	map<float ,string> songDis;
 	
 	feature_t * NoteEmd = NULL;	//记录减均值后的音符，以音符为单位
-	float * NoteDuration = NULL;	//记录每个音符持续帧数
+	float * NoteDuration = NULL;	//记录每个音符持续时间
 
-	signature_t query;	//记录音符长度，减均值后的音符，每个音符持续帧数
+	signature_t query;	//记录音符长度，减均值后的音符，每个音符持续时间
 	static int shengdaPitch = 0;	//记录特征提取次数
 	vector <float> Dis;
 	bool returnN = false;
@@ -2510,8 +2512,8 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 		shengdaPitch++;	//记录特征提取次数
 		FloatCopyToVector(queryPitch,pFeaBuf,nFeaLen);	//原始音高序列拷贝到vector中
 
-		int emdl = MyMinTwo(nFeaLen,emdLength);	//音高序列帧数，emdLength为哼唱音高序列的帧数上限
-		int lengC = 0;	//记录音符序列总帧数
+		int emdl = MyMinTwo(nFeaLen,emdLength);	//音高序列时长，emdLength为哼唱音高序列的时长上限
+		int lengC = 0;	//记录音符序列总时长
 		int lengNote = 0;	//记录实际音符序列长度
 
 		realPitchToToneShengda(queryPitch);	//音高序列转换为半音音符序列
@@ -2519,7 +2521,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 		float meanNote = MinusMeanSmooth(queryPitch);	//减均值操作，减均值后>12就-12，<-12就+12，返回均值
 		
 		NoteEmd = (feature_t *)malloc(nNoteLen*sizeof(feature_t));	//记录减均值后的音符，以音符为单位
-		NoteDuration = (float *)malloc(nNoteLen*sizeof(float));	//记录每个音符持续帧数
+		NoteDuration = (float *)malloc(nNoteLen*sizeof(float));	//记录每个音符持续时间
 
 		for (int i=0;i<nNoteLen;i++)
 		{
@@ -2534,19 +2536,19 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 			for (int j=0;j<QueryNotes[i].fNoteDuration;j++)	
 				queryPitchNote.push_back(NoteEmd[i]);
 
-			//记录每个音符持续帧数
-			if (lengC+QueryNotes[i].fNoteDuration <= emdLength)	//音符序列帧数未超过音高序列帧数，直接记录
+			//记录每个音符持续时间
+			if (lengC+QueryNotes[i].fNoteDuration <= emdLength)	//音符序列时长未超过音高序列时长，直接记录
 				NoteDuration[i] = QueryNotes[i].fNoteDuration;
-			else	//音符序列帧数超过音高序列帧数，调整最后一个音符持续帧数
+			else	//音符序列时长超过音高序列时长，调整最后一个音符持续时间
 				NoteDuration[i] = QueryNotes[i].fNoteDuration-(emdLength-lengC);
 
 			lengC += QueryNotes[i].fNoteDuration;
 
-			if (lengC >= emdl) break;	//音符序列帧数超过音高序列帧数，跳出
+			if (lengC >= emdl) break;	//音符序列时长超过音高序列时长，跳出
 		}
 		query.n = lengNote;	//记录音符长度
 		query.Features = NoteEmd;	//记录减均值后的音符，以音符为单位
-		query.Weights = NoteDuration;	//记录每个音符持续帧数
+		query.Weights = NoteDuration;	//记录每个音符持续时间
 	}
 	ofstream shengdaTimes("wav.result",ofstream::app);	//追加打开文件
 	shengdaTimes<<"盛大提取次数："<<shengdaPitch<< endl;	//输出是第几次提取
@@ -2564,14 +2566,15 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 
 	signature_t candiY;
 
-	candiY.Features=(feature_t *) malloc((MAX_SIG_SIZE-1)*sizeof(feature_t));
-	candiY.Weights=(float *) malloc((MAX_SIG_SIZE-1)*sizeof(float));
+	candiY.Features = (feature_t *) malloc((MAX_SIG_SIZE-1)*sizeof(feature_t));
+	candiY.Weights = (float *) malloc((MAX_SIG_SIZE-1)*sizeof(float));
 	
-	float FloorLevelInitial=0.6;//初始值
+	float FloorLevelInitial=0.6;	//初始值
 	float FloorLevel=FloorLevelInitial;
 	float UpperLimit=1.7;
-	float StretchStep=0.1; //步长其实一直是0.05
-	int MatchBeginPos=6;//代表query和dataY相差点数必须在这个1/MatchBeginPos范围之内才进行匹配
+	float StretchStep=0.1;	//步长其实一直是0.05
+	int MatchBeginPos=6;	//代表query和dataY相差点数必须在这个1/MatchBeginPos范围之内才进行匹配
+
 	static int CandidatesDTWAll=0;
 	float ratioAll=2.6;
 	static int filter0ne=0;
@@ -2604,8 +2607,17 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 			FloorLevel=FloorLevelInitial;
 			StretchStep=0.1;
 			UpperLimit=1;
-			QueryPitchToLSHVectorLinearStretchingShortToMoreNoteFirst(posPair,queryPitchNote,LSHQueryVectorLinearStretchingNote, 
-				FloorLevel, UpperLimit,stepFactor,stepRatio, StretchStep);
+
+			//抽取一维音高序列的第一个NLSH点
+			//输入：queryPitch，查询的一维音符序列
+			//noteMinFrame，音符最短持续帧数，不足则去除
+			//noteMaxFrame，音符最长持续帧数，超过则切分
+			//NLSHsize,NLSH点维数
+			//输出：posPairvector，记录LSH点的起始位置和持续长度
+			//LSHQueryVectorLinearStretching，记录LSH点
+			QueryPitchToLSHVectorLinearStretchingShortToMoreNoteFirst(posPair,queryPitchNote,
+				LSHQueryVectorLinearStretchingNote,
+				param[1].noteMinFrame,param[1].noteMaxFrame,param[1].LSHsize);
 		}
 		else if (recur==1)
 		{
@@ -3591,7 +3603,7 @@ int indexRead(ParamInfo *param,	map <string ,string> &songIDAndName)
 	vector<vector<float>> LSHVector;	//记录LSH点，每个点为一个音高序列
 
 	//LSH点抽取参数
-	int StepFactor=3;	//选择LSH点的间隔数（间隔几个点抽取一个点）
+	int StepFactor = 3;	//选择LSH点的间隔数（间隔几个点抽取一个点）
 	int LSHsize = 20;	//LSH窗长，一个LSH点的大小，20帧*3，2.4秒
 	int LSHshift = StepFactor*5;	//LSH窗移,15帧，0.6秒
 	int maxFrame = StepFactor*9*120*5;	//一维音高序列最大帧数
@@ -3600,25 +3612,31 @@ int indexRead(ParamInfo *param,	map <string ,string> &songIDAndName)
 	int noteMaxFrame = 10;	//一个音高的最长帧数（超过则切分）
 	int NLSHsize = 10;	//NLSH窗长，一个LSH点的大小
 
-	//存储LSH点的中间变量
-	PPointT *dataSet=NULL;	//存储LSH点，用于建立IndexHumming数据结构
-	PPointT *dataSetNote=NULL;	//存储NLSH点，用于建立IndexHumming数据结构
-
-	IntT RetainNum=3;	//每个点仅保留的点数
-	float stepRatio=1.5;	//query的LSH变换帧移
-	IntT LSHFilterNum=10;	//LSH滤波保留的点数
-
 	//更新帧和音符索引的参数列表
 	strcpy(param[0].wavename,fileName.c_str());
 	strcpy(param[1].wavename,fileName.c_str());
-	param[0].RetainNum=RetainNum;
-	param[1].RetainNum=5;
-	param[0].stepFactor=StepFactor;
-	param[1].stepFactor=StepFactor;
-	param[0].LSHFilterNum=LSHFilterNum;
-	param[1].LSHFilterNum=200;
-	param[0].stepRatio=stepRatio;
-	param[1].stepRatio=stepRatio;
+	param[0].RetainNum = 3;		//每个点仅保留的点数
+	param[1].RetainNum = 5;	
+	param[0].stepFactor = StepFactor;	//选择LSH点的间隔数
+	param[1].stepFactor = StepFactor;
+	param[0].LSHFilterNum = 10;	//LSH滤波保留的点数
+	param[1].LSHFilterNum = 200;
+	param[0].stepRatio = 1.5;	//query的LSH变换帧移
+	param[1].stepRatio = 1.5;
+	param[0].LSHsize = LSHsize;	//LSH点的维数
+	param[1].LSHsize = NLSHsize;
+	param[0].LSHshift = LSHshift;	//LSH点窗移
+	param[1].LSHshift = 1;
+	param[0].noteMinFrame = 3;	//音符最短帧数
+	param[1].noteMinFrame = 3;
+	param[0].noteMaxFrame = 10;	//音符最长帧数
+	param[1].noteMaxFrame = 10;
+	param[0].maxFrame = maxFrame;	//最大帧数
+	param[1].maxFrame = maxFrame;
+
+	//存储LSH点的中间变量
+	PPointT *dataSet=NULL;	//存储LSH点，用于建立IndexHumming数据结构
+	PPointT *dataSetNote=NULL;	//存储NLSH点，用于建立IndexHumming数据结构
 
 	//读入pv文件，将二维的(音符，持续时间)序列转化为一维音符序列
 	//输入：dataIndex: 索引音符列表文件

@@ -71,6 +71,10 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALLNote(vector<pair<short, sho
 int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vector<vector<IntT>> &IndexCandidatesStretch,
 				  map<unsigned long , pair<string,short>> &IndexLSH,map<unsigned long , pair<string,pair<short,short>>> &IndexLSHNote,
 				  float StretchStep,vector<vector<float>> &IndexCandidatesDis);
-int QueryPitchToLSHVectorLinearStretchingShortToMoreNoteFirst(vector<pair<short, short>>& posPairvector, vector <float> &queryPitch,vector <vector <vector<float>>> &LSHQueryVectorLinearStretching,
-															  float FloorLevel, float UpperLimit,int stepFactor,float stepRatio,float StretchStep);//stepFactor代表20维取点相隔几个点取一个，在原始基频的表示
+
+//抽取一维音高序列的第一个NLSH点
+int QueryPitchToLSHVectorLinearStretchingShortToMoreNoteFirst(vector<pair<short, short>>& posPairvector, 
+	vector <float> &queryPitch,vector <vector <vector<float>>> &LSHQueryVectorLinearStretching,
+	int noteMinFrame,int noteMaxFrame,int NLSHsize);
+
 #endif
