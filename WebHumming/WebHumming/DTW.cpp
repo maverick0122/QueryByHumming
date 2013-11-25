@@ -1885,20 +1885,21 @@ void Zerodiscre(vector <vector <double>> &x)
 	}
 }
 
-
+//线性伸缩
+//输入：queryX，原串，stretch，伸缩因子
+//输出：dataY，伸缩后的串
 void StringToString( vector<float>  &queryX,  vector<float>  &dataY,float stretch)
 {
 	int i,j,m,n,k;
-	m=queryX.size();
-	float ratio=0;
+	m = queryX.size();
+	float ratio = 0;
 	for (i=0;i<(m-1)*stretch;i++)
 	{
 		float pitch_query=0;
-		k=i/stretch;
+		k = i/stretch;
 		ratio=i/stretch-k;
 		if (k<m-1)
 		{
-
 			pitch_query=(queryX[k]*(1-ratio)+queryX[k+1]*ratio);
 			dataY.push_back(pitch_query);
 		}
@@ -2523,6 +2524,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 		NoteEmd = (feature_t *)malloc(nNoteLen*sizeof(feature_t));	//记录减均值后的音符，以音符为单位
 		NoteDuration = (float *)malloc(nNoteLen*sizeof(float));	//记录每个音符持续时间
 
+		//从QueryNotes中提取减均值后的音符，每个音符持续时间
 		for (int i=0;i<nNoteLen;i++)
 		{
 			lengNote++;	//记录实际音符序列长度
@@ -2571,11 +2573,11 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 	candiY.Features = (feature_t *) malloc((MAX_SIG_SIZE-1)*sizeof(feature_t));
 	candiY.Weights = (float *) malloc((MAX_SIG_SIZE-1)*sizeof(float));
 	
-	//LS(线性缩放)参数
-	float FloorLevelInitial=0.6;	//缩放因子初始值
-	float FloorLevel = FloorLevelInitial;	//缩放因子当前值
-	float UpperLimit=1.7;	//缩放因子上限
-	float StretchStep=0.1;	//缩放因子步长
+	//LS(线性伸缩)参数
+	float FloorLevelInitial=0.6;	//伸缩因子初始值
+	float FloorLevel = FloorLevelInitial;	//伸缩因子当前值
+	float UpperLimit=1.7;	//伸缩因子上限
+	float StretchStep=0.1;	//伸缩因子步长
 	int MatchBeginPos=6;	//代表query和dataY相差点数必须在这个1/MatchBeginPos范围之内才进行匹配
 
 	static int CandidatesDTWAll=0;
@@ -2584,9 +2586,9 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 	static int filterTwo=0;
 	static int filterThree=0;
 	vector <string> tempList;
-	vector <float >tempDis1;
-	vector <float >tempDis2;
-	vector <float >tempDis3;
+	vector <float > tempDis1;
+	vector <float > tempDis2;
+	vector <float > tempDis3;
 
 	for (int recur=0;recur<3;recur++)
 	{
@@ -2602,12 +2604,14 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 		{
 			filterThree++;
 		}
-		vector <vector<vector<float>>> LSHQueryVectorLinearStretching;
-		vector <vector<vector<float>>> LSHQueryVectorLinearStretchingNote;
-		vector<pair<short, short>> posPair;
+		vector <vector<vector<float>>> LSHQueryVectorLinearStretching;	//记录不同伸缩因子下抽取的LSH点集
+		vector <vector<vector<float>>> LSHQueryVectorLinearStretchingNote;	//记录不同最长帧下抽取的NLSH点集
+		vector<pair<short, short>> posPair;	//记录NLSH点的起始位置和持续帧数
+
 		if (recur==0)
 		{
-			FloorLevelInitial = 1;	//初始值
+			//设置LS参数
+			FloorLevelInitial = 1;
 			FloorLevel = FloorLevelInitial;
 			StretchStep = 0.1;
 			UpperLimit = 1;
@@ -2625,27 +2629,57 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 		}
 		else if (recur==1)
 		{
-			FloorLevelInitial=0.8;	//初始值
+			//设置LS参数
+			FloorLevelInitial=0.8;
 			FloorLevel=FloorLevelInitial;
 			StretchStep=0.2;
 			UpperLimit=1.4;
 		}
 		else if (recur==2)
 		{
-			FloorLevelInitial=0.6;//初始值
+			//设置LS参数
+			FloorLevelInitial=0.6;
 			FloorLevel=FloorLevelInitial;
 			StretchStep=0.1;
 			UpperLimit=1.7;
-			QueryPitchToLSHVectorLinearStretchingShortToMoreNote(posPair,queryPitchNote,LSHQueryVectorLinearStretchingNote, 
-				FloorLevel, UpperLimit,stepFactor,stepRatio, StretchStep);
+
+			//改变音符最长帧，再抽取NLSH点（没有做LS）
+			for(int recur_t=0; recur_t<1; recur_t++)
+			{
+				int noteMaxFrame_t;
+				if (recur_t==0)
+				{
+					noteMaxFrame_t = param[1].noteMaxFrame+2;
+				}
+				else
+				{
+					noteMaxFrame_t = param[1].noteMaxFrame-2;
+				}
+				
+				//抽取一维音高序列的NLSH点
+				//输入：queryPitch，查询的一维音符序列
+				//noteMinFrame，音符最短持续帧数，不足则去除
+				//noteMaxFrame，音符最长持续帧数，超过则切分
+				//NLSHsize,NLSH点维数
+				//输出：posPairvector，记录LSH点的起始位置和持续长度
+				//LSHQueryVectorLinearStretching，记录LSH点
+				QueryPitchToLSHVectorLinearStretchingShortToMoreNoteFirst(posPair,queryPitchNote,
+					LSHQueryVectorLinearStretchingNote,
+					param[1].noteMinFrame,noteMaxFrame_t,param[1].LSHsize);
+			}
 		}
 
+		//线性伸缩并抽取LSH点
+		//输入：queryPitch，一维音高向量
+		//FloorLevel，初始伸缩因子，UpperLimit，伸缩因子上限，StretchStep，伸缩步长
+		//stepFactor，抽取间隔，stepRatio，抽取窗移，LSHsize，抽取窗长，recur，上层函数的循环序号
+		//输出：LSHQueryVectorLinearStretching，所有伸缩因子下的LSH点集
 		QueryPitchToLSHVectorLinearStretchingShortToMore(queryPitch,LSHQueryVectorLinearStretching, 
-			FloorLevel, UpperLimit,stepFactor,stepRatio, StretchStep,recur); //query线性伸缩转为20维
-		//取消音符的LSH需要修改三个地方
+			FloorLevel, UpperLimit,stepFactor,stepRatio, StretchStep,recur,param[0].LSHsize);
 		
-		int LinearCoe=0;
-		int LinearCoeTotal=LSHQueryVectorLinearStretching.size();
+		//取消音符的LSH需要修改三个地方
+		int LinearCoe = 0;
+		int LinearCoeTotal = LSHQueryVectorLinearStretching.size();	//线性伸缩的LSH点集数目
 		vector<vector<IntT>> IndexCandidatesStretch;
 		vector<vector<float>> IndexCandidatesDis;
 		vector<vector<IntT>> CandidatesNumStretch;
@@ -2653,8 +2687,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 		firstTime=clock();
 		map<int,vector<int>> :: iterator samePointIte;
 
-
-		firstTimeTempLSH1=clock();
+		firstTimeTempLSH1 = clock();
 		int edge=6;
 		float LSratio=0.4;
 		int qRecurse=1;
@@ -2670,29 +2703,39 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 			//下面为音符的LSH搜索
 #if 1
 			LinearCoe=0;
-			PPointT *QueriesArray=NULL;//要free
-			if (LSHQueryVectorLinearStretchingNote[LinearCoe].size()>0)
+			PPointT *QueriesArray=NULL;	//NLSH点集
+
+			if (LSHQueryVectorLinearStretchingNote[LinearCoe].size()>0)	//若当前的NLSH点集不为空
 			{
-				QueriesArray=readDataSetFromVector(LSHQueryVectorLinearStretchingNote[LinearCoe]);
-				Int32T nPointsQuery=LSHQueryVectorLinearStretchingNote[LinearCoe].size();
-				IntT dimension=6;
+				//从LSH向量索引中读数据集，读入PPointT*中，读入每个LSH点时记录序号和LSH点的平方和
+				//输入：LSHVector：LSH点集
+				QueriesArray = readDataSetFromVector(LSHQueryVectorLinearStretchingNote[LinearCoe]);	//得到当前NLSH点集
+				Int32T nPointsQuery = LSHQueryVectorLinearStretchingNote[LinearCoe].size();	//当前NLSH点数
+
+				IntT dimension = 6;	//NLSH点维数
 				if (nPointsQuery>0)
 				{
-					dimension=LSHQueryVectorLinearStretchingNote[LinearCoe][0].size();
+					dimension = LSHQueryVectorLinearStretchingNote[LinearCoe][0].size();	//NLSH点真实维数
 				}
-				IntT LSHFilterReturnNum=0;
-				IntT *IndexArray=NULL;
-				int IndexArraySize=1000000;//最大查找候选数目
-				IndexArray=(IntT *)MALLOC(IndexArraySize *sizeof(IntT));
-				double *IndexArrayDis=(double *)MALLOC(IndexArraySize *sizeof(double));
-				IntT *IndexFilterArray=NULL;
-				IndexFilterArray=(IntT *)MALLOC(IndexArraySize/2 *sizeof(IntT));
-				IntT * NumArray=(IntT *)MALLOC(nPointsQuery *sizeof(IntT));//每个点返回的数目
-				IntT ResultSize=LSHStructToResultOnePointRetainSeveral(QueriesArray,nPointsQuery,IndexArraySize, 
-					IndexArray,IndexHumingNote,NumArray,RetainNumNote , dimension,LSHFilterNumNote,IndexFilterArray,LSHFilterReturnNum,IndexArrayDis);//得到结果，每个点返回RetainNum个候选
+
+				IntT LSHFilterReturnNum = 0;
+				IntT *IndexArray = NULL;
+				int IndexArraySize = 1000000;	//最大查找候选数目
+
+				IndexArray = (IntT *)MALLOC(IndexArraySize *sizeof(IntT));
+				double *IndexArrayDis = (double *)MALLOC(IndexArraySize *sizeof(double));
+				IntT *IndexFilterArray = NULL;
+				IndexFilterArray = (IntT *)MALLOC(IndexArraySize/2 *sizeof(IntT));
+				IntT * NumArray = (IntT *)MALLOC(nPointsQuery *sizeof(IntT));	//每个点返回的数目
+
+				//得到NLSH结果，即对每个LSH点进行RNN查询，返回RetainNum个候选
+				IntT ResultSize = LSHStructToResultOnePointRetainSeveral(QueriesArray,nPointsQuery,IndexArraySize, 
+					IndexArray,IndexHumingNote,NumArray,RetainNumNote , dimension,LSHFilterNumNote,IndexFilterArray,
+					LSHFilterReturnNum,IndexArrayDis);
+				
 				vector<IntT> IndexCandidates;
 				vector <float> DisCandidates;
-				vector<IntT> CandidatesNum;//每个点返回的数目存入Vector
+				vector<IntT> CandidatesNum;	//每个点返回的数目存入Vector
 				int curreIndex=0;
 
 				for (int i=0;i<LSHFilterReturnNum;i++)
@@ -3625,7 +3668,7 @@ int indexRead(ParamInfo *param,	map <string ,string> &songIDAndName)
 	param[1].stepFactor = StepFactor;
 	param[0].LSHFilterNum = 10;	//LSH滤波保留的点数
 	param[1].LSHFilterNum = 200;
-	param[0].stepRatio = 1.5;	//query的LSH变换帧移
+	param[0].stepRatio = 1.5;	//查询的LSH点窗移
 	param[1].stepRatio = 1.5;
 	param[0].LSHsize = LSHsize;	//LSH点的维数
 	param[1].LSHsize = NLSHsize;
@@ -3658,6 +3701,15 @@ int indexRead(ParamInfo *param,	map <string ,string> &songIDAndName)
 	IndexPitchToLSHVector(param[0].indexSongName, StepFactor, LSHsize, LSHshift, maxFrame, 
 		LSHVector, param[0].IndexLSH);
 
+	//将LSH点写入文件
+	//输入：LSHVector，LSH点，每个点为一个音高序列
+	//filename，输出文件路径
+	LSHVectorToFile(LSHVector,"LSHVector.txt");
+	//将LSH索引写入文件
+	//输入：IndexLSH，LSH索引，记录在LSHVector的序号，带路径的文件名，起始位置
+	//filename，输出文件路径
+	IndexLSHToFile(param[0].IndexLSH,"LSHIndex.txt");
+
 	//从LSH向量索引中读数据集，读入dataSet中，读入每个LSH点时记录序号和LSH点的平方和
 	dataSet = readDataSetFromVector(LSHVector);
 
@@ -3681,7 +3733,7 @@ int indexRead(ParamInfo *param,	map <string ,string> &songIDAndName)
 	//nSampleQueries：测试样本点数
 	//thresholdR：门限
 	//memoryUpperBound：内存上限
-	//输出：IndexHuming
+	//输出：IndexHuming，RNN索引
 	LSHDataStruct(dataSet, dimension, nPointsData, nSampleQueries,
 		thresholdR, memoryUpperBound, param[0].IndexHuming);
 	
@@ -3694,6 +3746,15 @@ int indexRead(ParamInfo *param,	map <string ,string> &songIDAndName)
 	//IndexLSH,	NLSH索引，记录在LSHVector的序号，带路径的文件名，起始位置，持续帧数
 	IndexPitchToLSHVectorNote(param[0].indexSongName, noteMaxFrame, NLSHsize, maxFrame, 
 		LSHVector, param[1].IndexLSHNote);
+
+	//将LSH点写入文件
+	//输入：LSHVector，LSH点，每个点为一个音高序列
+	//filename，输出文件路径
+	LSHVectorToFile(LSHVector,"NLSHVector.txt");
+	//将NLSH索引写入文件
+	//输入：IndexLSH，NLSH索引，记录在LSHVector的序号，带路径的文件名，起始位置，持续帧数
+	//filename，输出文件路径
+	IndexLSHNoteToFile(param[1].IndexLSHNote,"NLSHIndex.txt");
 
 	//从NLSH向量索引中读数据集，读入dataSetNote中，读入每个LSH点时记录序号和LSH点的平方和
 	dataSetNote=readDataSetFromVector(LSHVector);

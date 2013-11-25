@@ -41,9 +41,6 @@ int IndexPitchToLSHVectorNote(map<string , vector<float>> &indexSongName,
 	int noteMaxFrame, int NLSHsize, int maxFrame, 
 	vector<vector<float>> &LSHVector, map<unsigned long , pair<string,pair<short,short>>> &IndexLSH);
 
-int QueryPitchToLSHVectorLinearStretchingShortToMore(vector <float> &queryPitch,vector <vector<vector<float>>> &LSHQueryVectorLinearStretching,
-													 float FloorLevel, float UpperLimit,int stepFactor,float stepRatio,float StretchStep,int recur);
-
 int LSHresult(char *wavename,int sizeQuery,int stepFactor,float stretch,vector<vector<IntT>> &IndexCandidatesStretch,
 			  map<unsigned long ,pair<string,short>> &IndexLSH,float StretchStep);
 
@@ -60,8 +57,6 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALL(vector<IntT> &IndexCandida
 													  int &CandidatesSizeInDWT,int MatchBeginPos,map <string , short > &SongMapPosition,
 													  map <string , vector<pair<short, double>> > &SongMapPositionAll,int offsetbegin, int offsetLength);
 
-int QueryPitchToLSHVectorLinearStretchingShortToMoreNote(vector<pair<short, short>>& posPairvector, vector <float> &queryPitch,vector <vector <vector<float>>> &LSHQueryVectorLinearStretching,
-														 float FloorLevel, float UpperLimit,int stepFactor,float stepRatio,float StretchStep);
 int IndexSignToQueryAndDataVectorHummingMatchLeastALLNote(vector<pair<short, short>>& posPair,vector<IntT> &IndexCandidatesStretch,vector<IntT> &CandidatesNumStretch,float stretchFactor,
 														  map<unsigned long , pair<string,pair<short,short>>> &IndexLSH,int stepFactor,vector <float> queryPitch,
 														  vector<float>  &queryX, vector< vector<float> > &dataY,
@@ -76,5 +71,10 @@ int LSHresultRate(char *wavename,int sizeQuery,int stepFactor,float stretch,vect
 int QueryPitchToLSHVectorLinearStretchingShortToMoreNoteFirst(vector<pair<short, short>>& posPairvector, 
 	vector <float> &queryPitch,vector <vector <vector<float>>> &LSHQueryVectorLinearStretching,
 	int noteMinFrame,int noteMaxFrame,int NLSHsize);
+
+//线性伸缩并抽取LSH点
+int QueryPitchToLSHVectorLinearStretchingShortToMore(vector <float> &queryPitch,
+	vector <vector <vector<float>>> &LSHQueryVectorLinearStretching,
+	float FloorLevel, float UpperLimit,int stepFactor,float stepRatio,float StretchStep,int recur,int LSHsize);
 
 #endif

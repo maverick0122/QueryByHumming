@@ -173,7 +173,7 @@ IntT LSHDataQueryToResult(PPointT *dataSet,PPointT *sampleQueries,IntT dimension
 //nSampleQueries：测试样本点数
 //thresholdR：门限
 //memoryUpperBound：内存上限
-//输出：IndexHuming
+//输出：IndexHuming，RNN索引
 IntT LSHDataStruct(PPointT *dataSet,IntT dimension,Int32T nPointsData,IntT nSampleQueries,
 	float thresholdR,MemVarT memoryUpperBound,PRNearNeighborStructT &IndexHuming)
 {
@@ -214,27 +214,45 @@ IntT LSHStructToResult(PPointT *sampleQueries,Int32T nPointsQuery,IntT IndexArra
 	return IndexMaxSize;
 }
 
+
+
+//得到NLSH结果，即对每个LSH点进行RNN查询，返回RetainNum个候选
+//输入：sampleQueries，NLSH点集，nPointsQuery，NLSH点数
+//IndexArraySize，最大查找候选数
+//IndexHuming，NLSH点的RNN索引，RetainNum，NLSH每个点仅保留的点数
+//dimension，NLSH点维数，LSHFilterNum，NLSH滤波保留的点数
+//输出：
+//IndexArray，NumArray，每个点返回的数目
+//IndexFilterArray，sizeFilter，IndexArrayDis
 IntT LSHStructToResultOnePointRetainSeveral(PPointT *sampleQueries,Int32T nPointsQuery,IntT IndexArraySize, 
-					   IntT * &IndexArray,PRNearNeighborStructT &IndexHuming,IntT * NumArray,
-					   IntT RetainNum ,IntT dimension,IntT LSHFilterNum,
-					   IntT * &IndexFilterArray,IntT &sizeFilter,double * &IndexArrayDis)
+		IntT * &IndexArray,PRNearNeighborStructT &IndexHuming,IntT * NumArray,
+		IntT RetainNum ,IntT dimension,IntT LSHFilterNum,
+		IntT * &IndexFilterArray,IntT &sizeFilter,double * &IndexArrayDis)
 {
-	IntT resultSize=10;
-	PPointT *result=NULL;
-	IntT IndexMaxSize=0;
-	IntT IndexNum=0;
-	IntT IndexLSHFilterNum=0;
+	IntT IndexMaxSize = 0;
+	IntT IndexNum = 0;
+	IntT IndexLSHFilterNum = 0;
 	IntT sizeR;
-	IntT sizeRetain= LSHFilterNum > RetainNum ? LSHFilterNum: RetainNum;
-    IntT * RetainIndex=(IntT * )MALLOC(sizeRetain * sizeof(IntT));
-	double * RetainDis=(double * )MALLOC(sizeRetain * sizeof(double));
+	IntT sizeRetain = LSHFilterNum > RetainNum ? LSHFilterNum: RetainNum;	//实际每个点保留点数是RetainNum和LSHFilterNum的最小值
+
+    IntT * RetainIndex = (IntT *)MALLOC(sizeRetain * sizeof(IntT));
+	double * RetainDis = (double *)MALLOC(sizeRetain * sizeof(double));
+
+	//对每个LSH点进行RNN查询
 	for (int i=0;i<nPointsQuery;i++)
 	{
-		result=(PPointT*)MALLOC(resultSize * sizeof(PPointT));
-		sizeR=getRNearNeighbors(IndexHuming,sampleQueries[i],result,resultSize);
-		if (sizeR<=RetainNum)
+		IntT resultSize = 10;	//RNN查询结果开辟的空间
+		PPointT *result = (PPointT*)MALLOC(resultSize * sizeof(PPointT));	//RNN查询结果
+
+		//调用MIT的RNN开源代码得到RNN结果
+		//输入：IndexHuming，RNN索引，sampleQueries[i]，查询的LSH点
+		//输出：result，查询结果，resultSize，查询结果开辟的空间（结果数大于resultSize时，resultSize*=2，即空间不足开辟两倍空间）
+		//返回值：sizeR，查询结果数
+		sizeR = getRNearNeighbors(IndexHuming,sampleQueries[i],result,resultSize);
+
+		if (sizeR<=RetainNum)	//查询结果数比需要保留的点数少
 		{
-			if (sizeR>0)
+			if (sizeR>0)	//有查询结果
 			{
 				AllResultToRetainMostNearResult(RetainIndex,sampleQueries[i], sizeR ,
 					result,dimension,sizeR,RetainDis);
@@ -314,9 +332,7 @@ IntT LSHStructToResultOnePointRetainSeveral(PPointT *sampleQueries,Int32T nPoint
 
 			}
 			free(result);
-
 		}
-		
 	}
 	free(RetainIndex);
 	free(RetainDis);
