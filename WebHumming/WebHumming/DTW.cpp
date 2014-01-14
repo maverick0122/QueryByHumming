@@ -2589,6 +2589,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 	vector <float > tempDis1;
 	vector <float > tempDis2;
 	vector <float > tempDis3;
+	bool isPrintLSHQueryVectorLS = 0;
 
 	for (int recur=0;recur<3;recur++)
 	{
@@ -2622,7 +2623,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 			//noteMaxFrame，音符最长持续帧数，超过则切分
 			//NLSHsize,NLSH点维数
 			//输出：posPairvector，记录LSH点的起始位置和持续长度
-			//LSHQueryVectorLinearStretching，记录LSH点
+			//LSHQueryVectorLinearStretchingNote，记录LSH点
 			QueryPitchToLSHVectorLinearStretchingShortToMoreNoteFirst(posPair,queryPitchNote,
 				LSHQueryVectorLinearStretchingNote,
 				param[1].noteMinFrame,param[1].noteMaxFrame,param[1].LSHsize);
@@ -2662,7 +2663,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 				//noteMaxFrame，音符最长持续帧数，超过则切分
 				//NLSHsize,NLSH点维数
 				//输出：posPairvector，记录LSH点的起始位置和持续长度
-				//LSHQueryVectorLinearStretching，记录LSH点
+				//LSHQueryVectorLinearStretchingNote，记录LSH点
 				QueryPitchToLSHVectorLinearStretchingShortToMoreNoteFirst(posPair,queryPitchNote,
 					LSHQueryVectorLinearStretchingNote,
 					param[1].noteMinFrame,noteMaxFrame_t,param[1].LSHsize);
@@ -2677,6 +2678,20 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 		QueryPitchToLSHVectorLinearStretchingShortToMore(queryPitch,LSHQueryVectorLinearStretching, 
 			FloorLevel, UpperLimit,stepFactor,stepRatio, StretchStep,recur,param[0].LSHsize);
 		
+		if(!isPrintLSHQueryVectorLS)
+		{
+			//将LS后的LSH点写入文件
+			//输入：LSHVectorLS，LS后的LSH点，每个点为一个音高序列，vector[i][j][k]表示第i个伸缩因子下的第j个采样点的第k个数据
+			//filename，输出文件路径
+			LSHVectorLSToFile(LSHQueryVectorLinearStretching,"LSHQueryVectorLS.txt");
+			//将LS后的LSH索引写入文件
+			//输入：LSHVectorLS，LS后的LSH点，每个点为一个音高序列，vector[i][j][k]表示第i个伸缩因子下的第j个采样点的第k个数据
+			//filename，输出文件路径，输出文件中，每行为上述LSH点对应的索引（目前使用LSH点所属的文件名）
+			IndexLSHLSToFile(LSHQueryVectorLinearStretching,wavename,"IndexLSHQueryLS.txt");
+			cout<<"打印 "<<wavename<<" 的LSHQueryVectorLS完毕"<<endl;
+			isPrintLSHQueryVectorLS = 1;
+		}
+
 		//取消音符的LSH需要修改三个地方
 		int LinearCoe = 0;
 		int LinearCoeTotal = LSHQueryVectorLinearStretching.size();	//线性伸缩的LSH点集数目
