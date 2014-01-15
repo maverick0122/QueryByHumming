@@ -2683,11 +2683,11 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 			//将LS后的LSH点写入文件
 			//输入：LSHVectorLS，LS后的LSH点，每个点为一个音高序列，vector[i][j][k]表示第i个伸缩因子下的第j个采样点的第k个数据
 			//filename，输出文件路径
-			LSHVectorLSToFile(LSHQueryVectorLinearStretching,"LSHQueryVectorLS.txt");
+			LSHVectorLSToFile(LSHQueryVectorLinearStretching,"QueryLSHLSVector.txt");
 			//将LS后的LSH索引写入文件
 			//输入：LSHVectorLS，LS后的LSH点，每个点为一个音高序列，vector[i][j][k]表示第i个伸缩因子下的第j个采样点的第k个数据
 			//filename，输出文件路径，输出文件中，每行为上述LSH点对应的索引（目前使用LSH点所属的文件名）
-			IndexLSHLSToFile(LSHQueryVectorLinearStretching,wavename,"IndexLSHQueryLS.txt");
+			IndexLSHLSToFile(LSHQueryVectorLinearStretching,wavename,"QueryLSHLSIndex.txt");
 			cout<<"打印 "<<wavename<<" 的LSHQueryVectorLS完毕"<<endl;
 			isPrintLSHQueryVectorLS = 1;
 		}
