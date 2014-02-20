@@ -2687,8 +2687,9 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 			//将LS后的LSH索引写入文件
 			//输入：LSHVectorLS，LS后的LSH点，每个点为一个音高序列，vector[i][j][k]表示第i个伸缩因子下的第j个采样点的第k个数据
 			//filename，输出文件路径，输出文件中，每行为上述LSH点对应的索引（目前使用LSH点所属的文件名）
-			IndexLSHLSToFile(LSHQueryVectorLinearStretching,wavename,"QueryLSHLSIndex.txt");
-			cout<<"打印 "<<wavename<<" 的LSHQueryVectorLS完毕"<<endl;
+			//后一个输出文件用于统计每个查询文件的数据数
+			IndexLSHLSToFile(LSHQueryVectorLinearStretching,wavename,"QueryLSHLSIndex.txt","QueryLSHLSCounter.txt");
+			cout<<"打印 "<<wavename<<" 的QueryLSHLS 数据和索引 完毕"<<endl;
 			isPrintLSHQueryVectorLS = 1;
 		}
 
@@ -3722,8 +3723,8 @@ int indexRead(ParamInfo *param,	map <string ,string> &songIDAndName)
 	LSHVectorToFile(LSHVector,"LSHVector.txt");
 	//将LSH索引写入文件
 	//输入：IndexLSH，LSH索引，记录在LSHVector的序号，带路径的文件名，起始位置
-	//filename，输出文件路径
-	IndexLSHToFile(param[0].IndexLSH,"LSHIndex.txt");
+	//filename，输出文件路径，后一个输出文件用于统计每个索引文件的数据数
+	IndexLSHToFile(param[0].IndexLSH,"LSHIndex.txt","LSHCounter.txt");
 
 	//从LSH向量索引中读数据集，读入dataSet中，读入每个LSH点时记录序号和LSH点的平方和
 	dataSet = readDataSetFromVector(LSHVector);
@@ -3768,8 +3769,8 @@ int indexRead(ParamInfo *param,	map <string ,string> &songIDAndName)
 	LSHVectorToFile(LSHVector,"NLSHVector.txt");
 	//将NLSH索引写入文件
 	//输入：IndexLSH，NLSH索引，记录在LSHVector的序号，带路径的文件名，起始位置，持续帧数
-	//filename，输出文件路径
-	IndexLSHNoteToFile(param[1].IndexLSHNote,"NLSHIndex.txt");
+	//filename，输出文件路径，后一个输出文件用于统计每个索引文件的数据数
+	IndexLSHNoteToFile(param[1].IndexLSHNote,"NLSHIndex.txt","NLSHCounter.txt");
 
 	//从NLSH向量索引中读数据集，读入dataSetNote中，读入每个LSH点时记录序号和LSH点的平方和
 	dataSetNote=readDataSetFromVector(LSHVector);
