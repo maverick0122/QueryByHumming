@@ -2591,6 +2591,19 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 	vector <float > tempDis3;
 	bool isPrintLSHQueryVectorLS = 0;
 
+	//查询信息文件，因为这个三个文件为追加打开，重写前需删除
+	string query_vector_fname = "QueryLSHLSVector.txt";
+	string query_index_fname = "QueryLSHLSIndex.txt";
+	string query_counter_fname = "QueryLSHLSCounter.txt";
+	/*
+	string cmd1 = "del "+query_vector_fname;
+	string cmd2 = "del "+query_index_fname;
+	string cmd3 = "del "+query_counter_fname;
+	system(cmd1.c_str());
+	system(cmd2.c_str());
+	system(cmd3.c_str());
+	*/
+
 	for (int recur=0;recur<3;recur++)
 	{
 		if (recur==0)
@@ -2683,12 +2696,12 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 			//将LS后的LSH点写入文件
 			//输入：LSHVectorLS，LS后的LSH点，每个点为一个音高序列，vector[i][j][k]表示第i个伸缩因子下的第j个采样点的第k个数据
 			//filename，输出文件路径
-			LSHVectorLSToFile(LSHQueryVectorLinearStretching,"QueryLSHLSVector.txt");
+			LSHVectorLSToFile(LSHQueryVectorLinearStretching,query_vector_fname);
 			//将LS后的LSH索引写入文件
 			//输入：LSHVectorLS，LS后的LSH点，每个点为一个音高序列，vector[i][j][k]表示第i个伸缩因子下的第j个采样点的第k个数据
 			//filename，输出文件路径，输出文件中，每行为上述LSH点对应的索引（目前使用LSH点所属的文件名）
 			//后一个输出文件用于统计每个查询文件的数据数
-			IndexLSHLSToFile(LSHQueryVectorLinearStretching,wavename,"QueryLSHLSIndex.txt","QueryLSHLSCounter.txt");
+			IndexLSHLSToFile(LSHQueryVectorLinearStretching,wavename,query_index_fname,query_counter_fname);
 			cout<<"打印 "<<wavename<<" 的QueryLSHLS 数据和索引 完毕"<<endl;
 			isPrintLSHQueryVectorLS = 1;
 		}
