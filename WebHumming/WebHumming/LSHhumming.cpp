@@ -173,7 +173,7 @@ IntT LSHDataQueryToResult(PPointT *dataSet,PPointT *sampleQueries,IntT dimension
 //nSampleQueries：测试样本点数
 //thresholdR：门限
 //memoryUpperBound：内存上限
-//输出：IndexHuming
+//输出：IndexHuming，RNN索引
 IntT LSHDataStruct(PPointT *dataSet,IntT dimension,Int32T nPointsData,IntT nSampleQueries,
 	float thresholdR,MemVarT memoryUpperBound,PRNearNeighborStructT &IndexHuming)
 {
@@ -214,28 +214,46 @@ IntT LSHStructToResult(PPointT *sampleQueries,Int32T nPointsQuery,IntT IndexArra
 	return IndexMaxSize;
 }
 
+
+
+//得到NLSH结果，即对每个LSH点进行RNN查询，返回RetainNum个候选
+//输入：sampleQueries，NLSH点集，nPointsQuery，NLSH点数
+//IndexArraySize，最大查找候选数
+//IndexHuming，NLSH点的RNN索引，RetainNum，NLSH每个点仅保留的点数
+//dimension，NLSH点维数，LSHFilterNum，NLSH滤波保留的点数
+//输出：
+//IndexArray，NumArray，每个点返回的数目
+//IndexFilterArray，sizeFilter，IndexArrayDis
 IntT LSHStructToResultOnePointRetainSeveral(PPointT *sampleQueries,Int32T nPointsQuery,IntT IndexArraySize, 
-					   IntT * &IndexArray,PRNearNeighborStructT &IndexHuming,IntT * NumArray,
-					   IntT RetainNum ,IntT dimension,IntT LSHFilterNum,
-					   IntT * &IndexFilterArray,IntT &sizeFilter,double * &IndexArrayDis)
+		IntT * &IndexArray,PRNearNeighborStructT &IndexHuming,IntT * NumArray,
+		IntT RetainNum ,IntT dimension,IntT LSHFilterNum,
+		IntT * &IndexFilterArray,IntT &sizeFilter,double * &IndexArrayDis)
 {
-	IntT resultSize=10;
-	PPointT *result=NULL;
-	IntT IndexMaxSize=0;
-	IntT IndexNum=0;
-	IntT IndexLSHFilterNum=0;
+	IntT IndexMaxSize = 0;
+	IntT IndexNum = 0;
+	IntT IndexLSHFilterNum = 0;
 	IntT sizeR;
-	IntT sizeRetain= LSHFilterNum > RetainNum ? LSHFilterNum: RetainNum;
-    IntT * RetainIndex=(IntT * )MALLOC(sizeRetain * sizeof(IntT));
-	double * RetainDis=(double * )MALLOC(sizeRetain * sizeof(double));
+	IntT sizeRetain = LSHFilterNum > RetainNum ? LSHFilterNum: RetainNum;	//实际每个点保留点数是RetainNum和LSHFilterNum的最大值
+
+    IntT * RetainIndex = (IntT *)MALLOC(sizeRetain * sizeof(IntT));
+	double * RetainDis = (double *)MALLOC(sizeRetain * sizeof(double));
+
+	//对每个LSH点进行RNN查询
 	for (int i=0;i<nPointsQuery;i++)
 	{
-		result=(PPointT*)MALLOC(resultSize * sizeof(PPointT));
-		sizeR=getRNearNeighbors(IndexHuming,sampleQueries[i],result,resultSize);
-		if (sizeR<=RetainNum)
+		IntT resultSize = 10;	//RNN查询结果开辟的空间
+		PPointT *result = (PPointT*)MALLOC(resultSize * sizeof(PPointT));	//RNN查询结果
+
+		//调用MIT的RNN开源代码得到RNN结果
+		//输入：IndexHuming，RNN索引，sampleQueries[i]，查询的LSH点
+		//输出：result，查询结果，resultSize，查询结果开辟的空间（结果数大于resultSize时，resultSize*=2，即空间不足开辟两倍空间）
+		//返回值：sizeR，查询结果数
+		sizeR = getRNearNeighbors(IndexHuming,sampleQueries[i],result,resultSize);
+
+		if (sizeR<=RetainNum)	//查询结果数比需要保留的点数少
 		{
-			if (sizeR>0)
-			{
+			if (sizeR>0)	//有查询结果
+			{//获得各候选点与查询点的距离及对应序号到RetainDis及RetainIndex中
 				AllResultToRetainMostNearResult(RetainIndex,sampleQueries[i], sizeR ,
 					result,dimension,sizeR,RetainDis);
 			}
@@ -243,24 +261,24 @@ IntT LSHStructToResultOnePointRetainSeveral(PPointT *sampleQueries,Int32T nPoint
 			{
 				if (IndexNum<IndexArraySize)
 				{
-					IndexArray[IndexNum]=result[j]->index;
-					IndexFilterArray[IndexLSHFilterNum]=result[j]->index;
-					IndexArrayDis[IndexNum]=RetainDis[j];
+					IndexArray[IndexNum]=result[j]->index;//得到各点候选对应结果序号
+					IndexFilterArray[IndexLSHFilterNum]=result[j]->index;//得到各点候选对应结果序号
+					IndexArrayDis[IndexNum]=RetainDis[j];//得到结果距离值
 					IndexNum++;
 					IndexLSHFilterNum++;
 				}
 			}
-			NumArray[i]=sizeR;
-			IndexMaxSize+=sizeR;
+			NumArray[i]=sizeR;//得到每个点查询结果返回的数目
+			IndexMaxSize+=sizeR;//得到所有点的结果数目
 			free(result);
 		}
-		else
+		else//查询结果数比需要保留的多
 		{
-			IntT sizeResort= LSHFilterNum < sizeR ? LSHFilterNum: sizeR;
+			IntT sizeResort= LSHFilterNum < sizeR ? LSHFilterNum: sizeR;//实际每个点保留点数是sizeR和LSHFilterNum的最小值
 			AllResultToRetainMostNearResult(RetainIndex,sampleQueries[i], sizeResort ,
-				result,dimension,sizeR,RetainDis);
+				result,dimension,sizeR,RetainDis);//获得各候选点与查询点的距离（由小到大排序后）及对应序号到RetainDis及RetainIndex中
 			for (int j=0;j<RetainNum;j++)
-			{
+			{//得到retainNum个距离及序号结果
 				if (IndexNum<IndexArraySize)
 				{
 					IndexArray[IndexNum]=RetainIndex[j];
@@ -268,29 +286,29 @@ IntT LSHStructToResultOnePointRetainSeveral(PPointT *sampleQueries,Int32T nPoint
 					IndexNum++;
 				}
 			}
-			if (RetainDis[RetainNum-1]==RetainDis[RetainNum])
+			if (RetainDis[RetainNum-1]==RetainDis[RetainNum])//若最后一个候选结果与后一个候选结果相同，则后一个仍保留
 			{
 				IndexArray[IndexNum]=RetainIndex[RetainNum];
 				IndexArrayDis[IndexNum]=RetainDis[RetainNum];
 				IndexNum++;
-				NumArray[i]=RetainNum+1;
-				IndexMaxSize+=(RetainNum+1);
-				if (sizeR>RetainNum+1 && RetainDis[RetainNum]==RetainDis[RetainNum+1])
+				NumArray[i]=RetainNum+1;//需要返回的结果数加1
+				IndexMaxSize+=(RetainNum+1);//得到所有点的结果数目加1
+				if (sizeR>RetainNum+1 && RetainDis[RetainNum]==RetainDis[RetainNum+1])//若后面两个均与最后一个候选距离相同，则都保留
 				{
 					IndexArray[IndexNum]=RetainIndex[RetainNum+1];
 					IndexArrayDis[IndexNum]=RetainDis[RetainNum+1];
 					IndexNum++;
-					NumArray[i]=RetainNum+2;
-					IndexMaxSize+=1;
+					NumArray[i]=RetainNum+2;//需要返回的结果数加2
+					IndexMaxSize+=1;//得到所有点的结果数目再加1
 				}
 			}
-			else
+			else//若最后一个候选结果与后一个候选结果不同，则保留现有的
 			{
 				NumArray[i]=RetainNum;
 				IndexMaxSize+=RetainNum;
 			}
 			
-			if (sizeR<=LSHFilterNum)
+			if (sizeR<=LSHFilterNum)//若查询结果小于滤波保留的点数，则过滤索引为查询结果序号
 			{
 				for (int j=0;j<sizeR;j++)
 				{
@@ -301,7 +319,7 @@ IntT LSHStructToResultOnePointRetainSeveral(PPointT *sampleQueries,Int32T nPoint
 					}
 				}
 			}
-			else
+			else//若查询结果大于滤波保留的点数，则过滤索引为最后保留的结果序号
 			{
 				for (int j=0;j<LSHFilterNum;j++)
 				{
@@ -314,18 +332,16 @@ IntT LSHStructToResultOnePointRetainSeveral(PPointT *sampleQueries,Int32T nPoint
 
 			}
 			free(result);
-
 		}
-		
 	}
 	free(RetainIndex);
 	free(RetainDis);
-	sizeFilter=IndexLSHFilterNum;
+	sizeFilter=IndexLSHFilterNum;//所有查询出的候选结果数目
 
-	return IndexMaxSize;
+	return IndexMaxSize;//返回所有点的查询保留结果数目
 }
 
-
+//获得各候选点的距离排序后及对应序号到RetainIndex及RetainDis中
 IntT AllResultToRetainMostNearResult(IntT * RetainIndex,PPointT sampleQueries,IntT RetainNum ,
 									 PPointT *result,IntT dimension,IntT sizeResult,double * RetainDis)//返回最近的RetainNum个点
 {
@@ -333,11 +349,11 @@ IntT AllResultToRetainMostNearResult(IntT * RetainIndex,PPointT sampleQueries,In
 	IntT * ResultLable=(IntT * )MALLOC(sizeResult * sizeof(IntT));
 	for (int i=0;i<sizeResult;i++)
 	{
-		ResultDis[i]=dist(sampleQueries,result[i],dimension);
+		ResultDis[i]=dist(sampleQueries,result[i],dimension);//返回查询集与各候选集的距离
 		//ResultDis[i]=result[i]->sqrLength;
-		ResultLable[i]=result[i]->index;
+		ResultLable[i]=result[i]->index;//各候选对应序号
 	}
-	sort(ResultDis, ResultLable,sizeResult,RetainNum);
+	sort(ResultDis, ResultLable,sizeResult,RetainNum);//将各候选距离由小到大排序
 	for (int i=0;i<RetainNum;i++)
 	{
 		RetainIndex[i]=ResultLable[i];
@@ -368,7 +384,7 @@ float dist(PPointT p1, PPointT p2, IntT dimension){ //返回两个点的距离
 }
 
 
-void sort(float *arr,IntT * ResultLable,int n ,int SortNum)//排序
+void sort(float *arr,IntT * ResultLable,int n ,int SortNum)//由小到大排序
 {
 	float temp;
 	IntT tempLable;

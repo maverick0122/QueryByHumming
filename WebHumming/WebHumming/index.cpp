@@ -34,7 +34,15 @@ int readindex(string dataIndex,map<string , vector<vector<double>>> &indexSongNa
 	indexFile.close();
 	return 0;
 }
-
+//根据伸缩因子返回候选向量以及对应的歌曲名字
+////MatchBeginPos代表query和dataY相差点数必须在这个1/MatchBeginPos范围之内才进行匹配
+				//CandidatesSizeInDWT返回要精确匹配的数目
+				//posPair NLSH点的起始位置和持续长度
+				//IndexCandidatesStretch[sizeLSH-1],CandidatesNumStretch[sizeLSH-1] 候选序号及候选点数
+				//FloorLevel初始伸缩值         IndexLSH NLSH索引 NLSH点的序号，带路径的文件名，起始位置，持续帧数
+				//queryPitch,wav由音高序列转换的一维音符序列，queryX，伸缩后的序列
+				//indexSongName 索引pv文件路径和对应的一维音高序列
+//输出 SongNameMapToDataY 候选歌曲名，dataY NLSH点对应的候选音高序列 ，SongMapPositionAll 存入候选歌曲信息，包括候选歌曲名，哼唱段对应的的偏移位置及其实际长度。offsetbegin起始位置偏移量 
 int IndexSignToQueryAndDataVectorHummingMatchLeastALLNote(vector<pair<short, short>>& posPair,vector<IntT> &IndexCandidatesStretch,vector<IntT> &CandidatesNumStretch,float stretchFactor,
 													  map<unsigned long , pair<string,pair<short,short>>> &IndexLSH,int stepFactor,vector <float> queryPitch,
 													  vector<float>  &queryX, vector< vector<float> > &dataY,
@@ -45,8 +53,8 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALLNote(vector<pair<short, sho
 	//匹配最少数目，即精确匹配的数目最少
 	int posBegin=100;//小于1/posBegin的保留
 	queryX.clear();
-	StringToString(queryPitch,queryX,1);
-	int sizePoints=CandidatesNumStretch.size();
+	StringToString(queryPitch,queryX,1);//得到伸缩因子为1时伸缩后的串存入queryX中
+	int sizePoints=CandidatesNumStretch.size();//NLSH点数
 	int sizeCandidates=0;
 	int QueryLSHPos=0;
 	int QueryLSHLength=0;
@@ -54,7 +62,7 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALLNote(vector<pair<short, sho
 	float ratioLength=0;
 	int accuSizeQuery=0;
 	int DifferPos=0;
-	int sizeQuery=queryX.size();
+	int sizeQuery=queryX.size();//伸缩后串长，即音符长度
 	int queryLogicPos=0;
 	pair<string, pair<short ,short>> SongNamePos;
 	map<string , vector<float>> :: iterator SongTone;
@@ -65,80 +73,80 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALLNote(vector<pair<short, sho
 	vector<pair<short, double>>  :: iterator PaiCIter;
 
 	for (int i=0;i<sizePoints;i++)
-	{
-		int sizeCandidatesCurrent=sizeCandidates;
-		int CurrentNum=CandidatesNumStretch[i];
+	{//遍历所有NLSH点
+		int sizeCandidatesCurrent=sizeCandidates;//初始值为0
+		int CurrentNum=CandidatesNumStretch[i];//得到当前NLSH点对应的候选点数
 		for (int j=sizeCandidatesCurrent;j<sizeCandidatesCurrent+CurrentNum;j++)
-		{
-			sizeCandidates++;
+		{//遍历每一个NLSH点的候选点
+			sizeCandidates++;//计所有候选点数
 
-			if (IndexLSH.count(IndexCandidatesStretch[j]))
+			if (IndexLSH.count(IndexCandidatesStretch[j]))//索引中存在候选序号
 			{
-				QueryLSHPos=posPair[i].first;
-				QueryLSHLength=posPair[i].second;
-				SongNamePos=IndexLSH.find(IndexCandidatesStretch[j])->second;
-				DataYLength=SongNamePos.second.second;
-				ratioLength=DataYLength/QueryLSHLength;
-				queryLogicPos=DataYLength*QueryLSHPos/QueryLSHLength;
-				DifferPos=SongNamePos.second.first-queryLogicPos-offsetbegin;
-				accuSizeQuery=sizeQuery/ratioLength+offsetLength;
+				QueryLSHPos=posPair[i].first;//NLSH点的起始位置
+				QueryLSHLength=posPair[i].second;//NLSH点的持续帧数
+				SongNamePos=IndexLSH.find(IndexCandidatesStretch[j])->second;//得到候选序号对应的歌曲信息，包括带路径的文件名，起始位置，持续帧数
+				DataYLength=SongNamePos.second.second;//得到候选NLSH点的持续帧数
+				ratioLength=DataYLength/QueryLSHLength;//候选NLSH点持续帧数与待查询歌曲的NLSH点帧数比值，得到长度伸缩率
+				queryLogicPos=DataYLength*QueryLSHPos/QueryLSHLength;//得到理论上NLSH点的起始位置
+				DifferPos=SongNamePos.second.first-queryLogicPos-offsetbegin;//候选NLSH点起始位置-理论上NLSH点起始位置-起始偏移量=候选歌曲与哼唱歌曲对应的起始位置
+				accuSizeQuery=sizeQuery/ratioLength+offsetLength;//伸缩后的音符串长/长度伸缩率+偏移长度=哼唱段与候选段对应的实际长度
 				if (indexSongName.count(SongNamePos.first) && ratioLength>0.5 && ratioLength<2)
-				{
+				{//索引中存在候选歌曲名，且伸缩率大于0.5小于2
 					DataYOnePoint.clear();
-					SongTone=indexSongName.find(SongNamePos.first);
-					int sizeSong=SongTone->second.size();
+					SongTone=indexSongName.find(SongNamePos.first);//返回指向此候选歌曲的迭代器
+					int sizeSong=SongTone->second.size();//得到此候选歌曲的音高长度
 					if (DifferPos>=0  &&DifferPos+accuSizeQuery*3.0/4.0<sizeSong)//保证长度不是最末尾部分,最多错query一半
-					{
+					{//偏移量大于0，哼唱长度不超过候选歌曲长度，保证长度不是最末尾部分
 						for (int k=DifferPos;k<DifferPos+accuSizeQuery && k<sizeSong;k++)
-						{
+						{//将音高序列从候选歌曲与哼唱歌曲对应的起始位置开始复制过去DataYOnePoint，直到哼唱段对应的结尾中止
 							DataYOnePoint.push_back(SongTone->second[k]);//将此点复制过去
 						}
 						if (SongMapPositionAll.count(SongNamePos.first))
-						{
+						{//若已存在候选歌曲名
 							int booW=1;
-							songPosIter=SongMapPositionAll.find(SongNamePos.first);
+							songPosIter=SongMapPositionAll.find(SongNamePos.first);//返回歌曲位置索引
 							for (int i=0;i<songPosIter->second.size();i++)
 							{
 								if (abs(songPosIter->second[i].first-DifferPos)<sizeQuery/posBegin && 
 									abs(songPosIter->second[i].second-accuSizeQuery)<6)
-								{
+								{//若已存入的候选段与待存入候选段的偏移长度小于阈值，且哼唱段的实际长度之差小于阈值6则不进行存储
 									booW=0;
 								}
 							}
-							if (booW==1)
+							if (booW==1)//否则，存入待存入候选段
 							{
-								dataY.push_back(DataYOnePoint);
-								SongNameMapToDataY.push_back(SongNamePos.first);
-								SongMapPositionAll[SongNamePos.first].push_back(make_pair(DifferPos,accuSizeQuery));
-								CandidatesSizeInDWT++;
+								dataY.push_back(DataYOnePoint);//存入候选哼唱段音高序列
+								SongNameMapToDataY.push_back(SongNamePos.first);//存入候选歌曲名
+								SongMapPositionAll[SongNamePos.first].push_back(make_pair(DifferPos,accuSizeQuery));//候选歌曲名后存入哼唱段的偏移位置及其实际长度
+								CandidatesSizeInDWT++;//要精确匹配的候选歌曲加1
 							}
 						}
-						else
+						else//若不存在候选歌曲名
 						{
 							vector<pair<short, double>> temp;
-							temp.push_back(make_pair(DifferPos,accuSizeQuery));
-							SongMapPositionAll.insert(make_pair(SongNamePos.first,accuSizeQuery));
-							dataY.push_back(DataYOnePoint);
-							SongNameMapToDataY.push_back(SongNamePos.first);
-							CandidatesSizeInDWT++;
+							temp.push_back(make_pair(DifferPos,accuSizeQuery));//存入哼唱段的偏移位置及其实际长度
+							SongMapPositionAll.insert(make_pair(SongNamePos.first,accuSizeQuery));//存入候选歌曲信息，包括候选歌曲名，哼唱段对应的的偏移位置及其实际长度
+							dataY.push_back(DataYOnePoint);//存入候选哼唱段音高序列
+							SongNameMapToDataY.push_back(SongNamePos.first);//存入候选歌曲名
+							CandidatesSizeInDWT++;//要精确匹配的候选歌曲加1
 						}
 					}
 					else if (DifferPos<0 && DifferPos >-(sizeQuery/3) &&  DifferPos+sizeQuery<sizeSong)
-					{
-						DifferPos=0;
+					{//偏移量小于0且不能超过哼唱串长得的1/3，偏移量与实际串长之和小于候选歌曲音高长
+						DifferPos=0;//偏移量置为0
 						for (int k=0;k<DifferPos+accuSizeQuery && k<sizeSong;k++)
 						{
 							DataYOnePoint.push_back(SongTone->second[k]);//将此点复制过去
 						}
 						if (SongMapPositionAll.count(SongNamePos.first))
-						{
+						{//若已经存入此候选歌曲，则根据条件继续添加
 							int booW=1;
 							songPosIter=SongMapPositionAll.find(SongNamePos.first);
 							for (int i=0;i<songPosIter->second.size();i++)
 							{
 								if (abs(songPosIter->second[i].first-DifferPos)<sizeQuery/posBegin && 
 									abs(songPosIter->second[i].second-accuSizeQuery)<4)
-								{
+								{//若已存入的候选段与待存入候选段的偏移长度小于阈值，posBegin=100且哼唱段的实际长度之差小于阈值4则不进行存储
 									booW=0;
 								}
 							}
@@ -151,7 +159,7 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALLNote(vector<pair<short, sho
 							}
 						}
 						else
-						{
+						{//若没有存入过此候选歌曲，则添加
 							vector<pair<short, double>> temp;
 							temp.push_back(make_pair(DifferPos,accuSizeQuery));
 							SongMapPositionAll.insert(make_pair(SongNamePos.first,temp));
@@ -161,7 +169,7 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALLNote(vector<pair<short, sho
 						}
 					}
 					else
-						CandidatesNumStretch[i]--;//此矩阵中存储实际精确匹配的数目
+						CandidatesNumStretch[i]--;//此矩阵中存储实际精确匹配的数目 减一
 				}
 				else
 					CandidatesNumStretch[i]--;
@@ -173,7 +181,15 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALLNote(vector<pair<short, sho
 	return 0;
 }
 
-
+//根据伸缩因子返回候选向量以及对应的歌曲名字
+						////MatchBeginPos代表query和dataY相差点数必须在这个1/MatchBeginPos范围之内才进行匹配
+						//CandidatesSizeInDWT返回要精确匹配的数目
+						//IndexCandidatesStretch[sizeLSH-1],CandidatesNumStretch[sizeLSH-1] 候选序号及候选点数
+						//FloorLevel初始伸缩值         IndexLSH //LSH索引，记录LSH点的序号，带路径的文件名，起始位置
+						//queryPitch,wav由音高序列转换的一维音高序列，queryStretchPitch，伸缩后的序列
+						//indexSongName 索引pv文件路径和对应的一维音高序列
+						//输出 SongNameMapToDataY 候选歌曲名，dataY LSH点对应的候选音高序列 ，
+						//SongMapPositionAll 存入候选歌曲信息，包括候选歌曲名，伸缩后对应的起始位置及伸缩因子。offsetbegin起始位置偏移量 
 int IndexSignToQueryAndDataVectorHummingMatchLeastALL(vector<IntT> &IndexCandidatesStretch,vector<IntT> &CandidatesNumStretch,float stretchFactor,
 													  map<unsigned long , pair<string,short>> &IndexLSH,int stepFactor,vector <float> queryPitch,
 													  vector<float>  &queryX, vector< vector<float> > &dataY,
@@ -184,14 +200,14 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALL(vector<IntT> &IndexCandida
 	//匹配最少数目，即精确匹配的数目最少
 	int posBegin=100;//小于1/posBegin的保留
 	queryX.clear();
-	StringToString(queryPitch,queryX,1);
-	int sizePoints=CandidatesNumStretch.size();
+	StringToString(queryPitch,queryX,1);//得到伸缩因子为1时伸缩后的串存入queryX中
+	int sizePoints=CandidatesNumStretch.size();//LSH点数
 	int sizeCandidates=0;
 	int QueryLSHPos=0;
 	int DifferPos=0;
-	int sizeQuery=queryX.size();
+	int sizeQuery=queryX.size();//伸缩后的音高点数
 
-	sizeQuery=(sizeQuery*stretchFactor+offsetLength);
+	sizeQuery=(sizeQuery*stretchFactor+offsetLength);//得到当前真实的查询段音高长度
 
 	pair<string, short> SongNamePos;
 	map<string , vector<float>> :: iterator SongTone;
@@ -202,36 +218,36 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALL(vector<IntT> &IndexCandida
 	vector<pair<short, double>>  :: iterator PaiCIter;
 
 	for (int i=0;i<sizePoints;i++)
-	{
+	{//遍历所有LSH点
 		int sizeCandidatesCurrent=sizeCandidates;
-		int CurrentNum=CandidatesNumStretch[i];
+		int CurrentNum=CandidatesNumStretch[i];//得到当前NLSH点对应的候选点数
 		for (int j=sizeCandidatesCurrent;j<sizeCandidatesCurrent+CurrentNum;j++)
-		{
-			sizeCandidates++;
+		{//遍历每个LSH的候选点
+			sizeCandidates++;//计所有候选点数
 
 			if (IndexLSH.count(IndexCandidatesStretch[j]))
-			{
-				QueryLSHPos=i*stepFactor;
-				SongNamePos=IndexLSH.find(IndexCandidatesStretch[j])->second;
-				DifferPos=SongNamePos.second-QueryLSHPos-offsetbegin;
+			{//索引中存在候选点
+				QueryLSHPos=i*stepFactor;//伸缩后的步长
+				SongNamePos=IndexLSH.find(IndexCandidatesStretch[j])->second;//得到候选对应的歌曲名和起始位置
+				DifferPos=SongNamePos.second-QueryLSHPos-offsetbegin;//得到伸缩后对应的起始位置
 				if (indexSongName.count(SongNamePos.first))
-				{
+				{//索引歌曲名中存在候选歌曲名
 					DataYOnePoint.clear();
-					SongTone=indexSongName.find(SongNamePos.first);
-					int sizeSong=SongTone->second.size();
+					SongTone=indexSongName.find(SongNamePos.first);//找到此候选歌曲名相应的迭代器
+					int sizeSong=SongTone->second.size();//得到候选歌曲音高序列长度
 					if (DifferPos>=0  &&DifferPos+sizeQuery*3.0/4.0<sizeSong)//保证长度不是最末尾部分,最多错query一半
 					{
 						for (int k=DifferPos;k<DifferPos+sizeQuery && k<sizeSong;k++)
-						{
+						{//将音高序列从候选歌曲与哼唱歌曲对应的起始位置开始复制过去DataYOnePoint，直到哼唱段对应的结尾中止
 							DataYOnePoint.push_back(SongTone->second[k]);//将此点复制过去
 
 						}
 						if (SongMapPositionAll.count(SongNamePos.first))
-						{
+						{//若已经存在候选歌曲
 							int booW=1;
 							songPosIter=SongMapPositionAll.find(SongNamePos.first);
 							for (int i=0;i<songPosIter->second.size();i++)
-							{
+							{//若已存入的候选段与待存入候选段的偏移长度小于阈值，posBegin=100且伸缩因子之差小于阈值0.1则不进行存储
 								if (abs(songPosIter->second[i].first-DifferPos)<sizeQuery/posBegin && 
 									abs(songPosIter->second[i].second-stretchFactor)<0.1)
 								{
@@ -239,30 +255,30 @@ int IndexSignToQueryAndDataVectorHummingMatchLeastALL(vector<IntT> &IndexCandida
 								}
 							}
 							if (booW==1)
-							{
-								dataY.push_back(DataYOnePoint);
-								SongNameMapToDataY.push_back(SongNamePos.first);
-								SongMapPositionAll[SongNamePos.first].push_back(make_pair(DifferPos,stretchFactor));
-								CandidatesSizeInDWT++;
+							{//否则进行存储
+								dataY.push_back(DataYOnePoint);//将音高序列从候选歌曲与哼唱歌曲对应的起始位置开始复制过去
+								SongNameMapToDataY.push_back(SongNamePos.first);//存入候选歌曲名
+								SongMapPositionAll[SongNamePos.first].push_back(make_pair(DifferPos,stretchFactor));//存入候选歌曲名 伸缩后对应的起始位置及伸缩因子
+								CandidatesSizeInDWT++;//要精确匹配的候选歌曲数
 
 							}
 						}
 						else
 						{
 							vector<pair<short, double>> temp;
-							temp.push_back(make_pair(DifferPos,stretchFactor));
-							SongMapPositionAll.insert(make_pair(SongNamePos.first,temp));
-							dataY.push_back(DataYOnePoint);
-							SongNameMapToDataY.push_back(SongNamePos.first);
-							CandidatesSizeInDWT++;
+							temp.push_back(make_pair(DifferPos,stretchFactor));//存入伸缩后对应的起始位置及伸缩因子
+							SongMapPositionAll.insert(make_pair(SongNamePos.first,temp));//存入候选歌曲名 伸缩后对应的起始位置及伸缩因子
+							dataY.push_back(DataYOnePoint);//将音高序列从候选歌曲与哼唱歌曲对应的起始位置开始复制过去
+							SongNameMapToDataY.push_back(SongNamePos.first);//存入候选歌曲名
+							CandidatesSizeInDWT++;//要精确匹配的候选歌曲数
 
 						}
 					}
 					else if (DifferPos<0 && DifferPos >-(sizeQuery/3) &&  DifferPos+sizeQuery<sizeSong)
-					{
-						DifferPos=0;
+					{//修正过的起始位置小于0
+						DifferPos=0;//则起始位置置为0
 						for (int k=0;k<DifferPos+sizeQuery && k<sizeSong;k++)
-						{
+						{//将音高序列从候选歌曲与哼唱歌曲对应的起始位置开始复制过去
 							DataYOnePoint.push_back(SongTone->second[k]);//将此点复制过去
 
 						}
@@ -326,6 +342,9 @@ int readIndexPitch8MinutesNewPv(string dataIndex, map<string , vector<float>> &i
 
 	string songName;	//pv文件名
 	int totalMidi=0;	//pv文件计数
+	
+	string MidiOut("midiPitch.txt");	//存放midi音高序列结果的文件
+	ofstream midiPitch(MidiOut.c_str(),ofstream::app);
 
 	while (indexFile>>songName)	//读入一个pv文件名
 	{
@@ -337,7 +356,9 @@ int readIndexPitch8MinutesNewPv(string dataIndex, map<string , vector<float>> &i
 		}
 
 		songName = "5355P\\" + songName;	//音符文件(*.pv)路径
-		
+
+		midiPitch<<songName<<":"<<endl;
+
 		locale::global(locale(""));		//设定全局 locale 为环境设置的locale,解决std::ofstream.open()中文路径文件名问题
 		
 		ifstream songPitch;
@@ -359,15 +380,15 @@ int readIndexPitch8MinutesNewPv(string dataIndex, map<string , vector<float>> &i
 		while (time_midi < max_time_midi && 
 			songPitch>>songPitchNum && songPitch>>songPitchBegin && songPitch>>songPitchDuration )
 		{
-			pitchNum = atof(songPitchNum.c_str());	//音符
+			pitchNum = atof(songPitchNum.c_str());	//音符值
 			duration = atof(songPitchDuration.c_str());	//持续时间
 			pitchAmount = duration * frames_per_sec;	//音符持续的连续帧数，25帧/s
 			//cout<<pitchNum<<" "<<duration<<" "<<pitchAmount<<endl;
 
-			if(duration<5 && pitchAmount>=1)	//有效音符长度小于5s，大于1帧，即40ms
+			if(duration<5 && pitchAmount>=3)	//有效音符长度小于5s，大于3帧，即40ms，0.4s  修改为大于1帧
 			{
 				
-				if (pitchNum != pitchPre && pitchAmount<3)	//和前一个音符不同且长度小于3帧，不处理
+				if (pitchNum != pitchPre && pitchAmount<3)	//和前一个音符不同且长度小于3帧，不处理, 此处改为1帧
 				{
 					;
 				}
@@ -390,15 +411,29 @@ int readIndexPitch8MinutesNewPv(string dataIndex, map<string , vector<float>> &i
 		NoZero(database);	//去除序列中的零值
 		smooth(database);	//用五点中值法平滑，窗长为5，窗移为1
 		MinusMeanWithThd(database,max_mean_thd);		//减均值操作。最多计算前max_mean_thd帧的均值
+		if(!midiPitch)
+		{
+			cout<<"fail open midiPitch"<<endl;	
+		}
+		for(int k=0;k<database.size();k++)
+		{
+			
+			midiPitch<<database[k]<<" ";
+		}
+		midiPitch<<endl;
 
 		indexSongName.insert(make_pair(songName,database));	//将pv文件名和一维音高序列插入输出变量
-
+		
+		
 		database.clear();	//清空当前pv文件的一维音高序列
 		songPitch.close();	//关闭当前pv文件
 		songPitch.clear();	//清空文件流
 	}
+	
+	
+	
 	indexFile.close();	//关闭pv列表文件
-
+	midiPitch.close();
 	return 0;
 }
 
@@ -499,7 +534,7 @@ int IndexPitchToLSHVectorNote(map<string , vector<float>> &indexSongName,
 		{
 			float currentTone=1000;	//存当前音高
 			short frameNow = 0;		//当前LSH点持续帧数
-			int oneNoteDuration = 0;	//第一个音符持续的帧数
+			int oneNoteDuration = 0;	//第一个音符持续的音高帧数
 			float TheFirstNote = indexIte->second[pos];	//第一个音高
 			
 			vector <float> temp;	//当前LSH点用的帧
@@ -521,7 +556,7 @@ int IndexPitchToLSHVectorNote(map<string , vector<float>> &indexSongName,
 				//当前LSH点维数达上限，且当前音高和前一个不同，当前LSH点抽取完毕
 				if (LSHVectorDimention.size()==NLSHsize && currentTone !=indexIte->second[i])
 				{
-					break;
+					break;//退出循环
 				}
 
 				if (currentTone !=indexIte->second[i])	//当前音高和前一个不同
@@ -558,7 +593,7 @@ int IndexPitchToLSHVectorNote(map<string , vector<float>> &indexSongName,
 			else	//当前pv文件抽取不到1个完整的LSH点，跳过
 				break;
 
-			//LSH窗移为第一个音符的持续帧数，且不超过最长帧
+			//LSH窗移为第一个音高的持续帧数，且不超过最长帧
 			if (oneNoteDuration>=noteMaxFrame)
 				pos+=noteMaxFrame;
 			else
@@ -615,15 +650,15 @@ int IndexPitchToLSHVector(map<string , vector<float>> &indexSongName,
 				{
 					temp.push_back(indexIte->second[i+k]);
 				}
-				stable_sort(temp.begin(),temp.end());
+				stable_sort(temp.begin(),temp.end());//稳定排序，不改变相同值的前后顺序
 				LSHVectorDimention.push_back(temp[StepFactor/2]);	
 			}
 
 			MinusMean(LSHVectorDimention);		//减均值
-			LSHVector.push_back(LSHVectorDimention);	//加入LSH点集
+			LSHVector.push_back(LSHVectorDimention);	//加入LSH点集,得到所有pv文件提取的lsh点集
 		}
 	}
-	ofstream outf("wav.result",ofstream::app);
+	ofstream outf("wav.result",ofstream::app);//已追加方式打开文件
 	outf<<"LSH总点数："<<pointNum<<endl;
 	cout<<"LSH总点数："<<pointNum<<endl;
 	outf.close();
@@ -634,7 +669,7 @@ int IndexPitchToLSHVector(map<string , vector<float>> &indexSongName,
 //输入：LSHVector：LSH点集
 PPointT * readDataSetFromVector(vector<vector<float>> &LSHVector )
 {
-	IntT nPoints = LSHVector.size();	//LSH点集大小，即pv文件数
+	IntT nPoints = LSHVector.size();	//LSH点集大小，即pv文件数？？，应该是所有pv文件的LSH点集大小吧
 	PPointT *dataSetPoints = NULL;		//返回的结果
 
 	FAILIF(NULL == (dataSetPoints = (PPointT*)MALLOC(nPoints * sizeof(PPointT))));	//开辟空间
@@ -669,139 +704,9 @@ PPointT readPointVector(vector<float> &VectorTone)
 	return p;
 }
 
-int QueryPitchToLSHVectorLinearStretchingShortToMoreNote(vector<pair<short, short>>& posPairvector, vector <float> &queryPitch,vector <vector <vector<float>>> &LSHQueryVectorLinearStretching,
-	float FloorLevel, float UpperLimit,int stepFactor,float stepRatio,float StretchStep)//stepFactor代表20维取点相隔几个点取一个，在原始基频的表示
-{
-	vector <float> LSHVector20Dimention;
-	vector <vector <float> >LSHQueryVectorOneStretch;//一次伸缩的结果
-	long OneSongPoint=0;
-	static int numEntry=0;
-	set<pair<short, short>> posPairTemp;
-	numEntry++;
-	static long QueryPoint20Demention=0;
-	int sizeTone=queryPitch.size();
-
-	float currentTone=0;
-	short frameNow=0;
-	int oneNoteDuration=0;
-	float TheFirstNote=0;
-	vector <float> temp;
-	int CuNoteNum=0;
-	int Again=0;
-	int fuseNum=0;
-	int NoteDimention=10;
-	for (int recur=0;recur<3;recur++)
-	{
-		fuseNum=3;
-		if (recur==1)
-		{
-			continue;
-		}
-		int MaxLength=12-recur*2;
-		for (int pos=0;pos<sizeTone;)
-		{
-
-			currentTone=1000;
-			frameNow=0;
-			oneNoteDuration=0;
-			TheFirstNote=queryPitch[pos];
-			temp.clear();
-
-
-			LSHVector20Dimention.clear();
-			for (int i=pos;i<sizeTone;i+=1)
-			{
-				frameNow++;
-				temp.push_back(queryPitch[i]);
-				if (TheFirstNote==queryPitch[i])
-				{
-					oneNoteDuration++;
-				}
-				else
-					TheFirstNote=1000;
-				if (LSHVector20Dimention.size()==NoteDimention  && currentTone !=queryPitch[i])
-				{
-					break;
-				}
-				if (currentTone !=queryPitch[i] && CuNoteNum<=fuseNum)
-				{
-					currentTone=queryPitch[i];
-					if (!LSHVector20Dimention.empty())
-					{
-						LSHVector20Dimention.pop_back();
-					}
-
-					LSHVector20Dimention.push_back(queryPitch[i]);
-				}
-				else if (currentTone !=queryPitch[i] && CuNoteNum>fuseNum)
-				{
-					CuNoteNum=0;
-					currentTone=queryPitch[i];
-					LSHVector20Dimention.push_back(queryPitch[i]);
-				} 
-				else
-				{
-					CuNoteNum++;
-				}
-
-				if (LSHVector20Dimention.size()==NoteDimention && CuNoteNum>=MaxLength)
-				{
-					break;
-				}
-				if (CuNoteNum>=MaxLength)
-				{
-					CuNoteNum=0;
-					currentTone=queryPitch[i];
-					LSHVector20Dimention.push_back(queryPitch[i]);
-				}
-			}
-
-			if (LSHVector20Dimention.size()==NoteDimention)
-			{
-				OneSongPoint++;
-				if (posPairTemp.count(make_pair(pos,frameNow)))
-				{
-					;
-				} 
-				else
-				{
-					posPairTemp.insert(make_pair(pos,frameNow));
-					posPairvector.push_back(make_pair(pos,frameNow));
-					float mean=MeanLSH(temp);
-					MeanNoteLSH(LSHVector20Dimention,mean);
-					LSHQueryVectorOneStretch.push_back(LSHVector20Dimention);
-				}
-			}
-			else
-				pos+=sizeTone;
-			if (oneNoteDuration >= MaxLength)
-			{
-				pos+=MaxLength;
-			} 
-			else
-			{
-				pos+=oneNoteDuration;
-			}
-		}
-	}
-	LSHQueryVectorLinearStretching.push_back(LSHQueryVectorOneStretch);
-
-	QueryPoint20Demention+=OneSongPoint;
-
-
-	if (numEntry%100==0 || numEntry >=330)
-	{
-		ofstream outf("wav.result",ofstream::app);
-		outf<<"当前歌总query点数："<<OneSongPoint<<"全部歌曲总query点数:"<<QueryPoint20Demention<<endl;
-		cout<<"当前歌总query点数："<<OneSongPoint<<"全部歌曲总query点数:"<<QueryPoint20Demention<<endl;
-		outf.close();
-	}
-	return 0;
-}
-
 
 //抽取一维音高序列的NLSH点
-//输入：queryPitch，查询的一维音符序列
+//输入：queryPitchNote，查询的一维音符序列
 //noteMinFrame，音符最短持续帧数，不足则去除
 //noteMaxFrame，音符最长持续帧数，超过则切分
 //NLSHsize,NLSH点维数
@@ -893,7 +798,7 @@ int QueryPitchToLSHVectorLinearStretchingShortToMoreNoteFirst(vector<pair<short,
 			} 
 			else
 			{
-				posPairTemp.push_back(make_pair(pos,frameNow));	//记录当前LSH点的起始位置和持续长度
+				posPairTemp.insert(make_pair(pos,frameNow));	//记录当前LSH点的起始位置和持续长度
 				posPairvector.push_back(make_pair(pos,frameNow));	//记录当前LSH点的起始位置和持续长度
 				float mean = MeanLSH(temp);	//求当前LSH点内所有帧的均值
 				MeanNoteLSH(LSHVector20Dimention,mean);	//减均值
@@ -921,26 +826,30 @@ int QueryPitchToLSHVectorLinearStretchingShortToMoreNoteFirst(vector<pair<short,
 	if (numEntry%100==0 || numEntry >=330)
 	{
 		ofstream outf("wav.result",ofstream::app);
-		outf<<"当前歌NLSH点数："<<OneSongPoint<<"全部歌曲NLSH点数:"<<QueryPoint20Demention<<endl;
-		cout<<"当前歌NLSH点数："<<OneSongPoint<<"全部歌曲NLSH点数:"<<QueryPoint20Demention<<endl;
+		outf<<"当前歌NLSH点数："<<OneSongPoint<<" 全部歌曲NLSH点数:"<<QueryPoint20Demention<<endl;
+		cout<<"当前歌NLSH点数："<<OneSongPoint<<" 全部歌曲NLSH点数:"<<QueryPoint20Demention<<endl;
 		outf.close();
 	}
 
 	return 0;
 }
 
-int QueryPitchToLSHVectorLinearStretchingShortToMore(vector <float> &queryPitch,vector <vector <vector<float>>> &LSHQueryVectorLinearStretching,
-										  float FloorLevel, float UpperLimit,int stepFactor,float stepRatio,float StretchStep,int recur)//stepFactor代表20维取点相隔几个点取一个，在原始基频的表示
+//线性伸缩并抽取LSH点
+//输入：queryPitch，一维音高向量
+//FloorLevel，初始伸缩因子，UpperLimit，伸缩因子上限，StretchStep，伸缩步长
+//stepFactor，抽取间隔，stepRatio，抽取窗移，LSHsize，抽取窗长，recur，上层函数的循环序号
+//输出：LSHQueryVectorLinearStretching，所有伸缩因子下的LSH点集
+int QueryPitchToLSHVectorLinearStretchingShortToMore(vector <float> &queryPitch,
+	vector <vector <vector<float>>> &LSHQueryVectorLinearStretching,
+	float FloorLevel, float UpperLimit,int stepFactor,float stepRatio,float StretchStep,int recur,int LSHsize)
 {
-	vector <float> LSHVector20Dimention;
-	vector <vector <float> >LSHQueryVectorOneStretch;//一次伸缩的结果
-	long OneSongPoint=0;
-	static int numEntry=0;
+	long OneSongPoint=0;	//记录LSH点数
+	static int numEntry=0;	//记录进入此函数的次数
 	numEntry++;
-	static long QueryPoint20Demention=0;
+	static long QueryPoint20Demention=0;	//记录LSH总点数
 
-	float currentTone=0;
-	for (;FloorLevel<UpperLimit+StretchStep;FloorLevel+=StretchStep)
+	//遍历所有伸缩因子
+	for (; FloorLevel<UpperLimit+StretchStep; FloorLevel+=StretchStep)
 	{
 		if ((recur==1 || recur==2 )&& FloorLevel<=1.01 && FloorLevel>=0.99)
 		{
@@ -950,38 +859,46 @@ int QueryPitchToLSHVectorLinearStretchingShortToMore(vector <float> &queryPitch,
 		{
 			continue;
 		}
-		int StepFactorCurrent=int(stepFactor*stepRatio*FloorLevel/**FloorLevel*/);
-		vector <float> queryPitchStretch;
+		vector <float> queryPitchStretch;	//线性伸缩后的串
+
+		//线性伸缩，根据伸缩因子FloorLevel线性伸缩queryPitch，得到queryPitchStretch
 		StringToString(queryPitch,queryPitchStretch,FloorLevel);
-		int sizeTone=queryPitchStretch.size();
-		LSHQueryVectorOneStretch.clear();
-		for (int pos=0;pos<sizeTone-stepFactor*21 ;pos+=StepFactorCurrent)
+
+		int sizeTone = queryPitchStretch.size();	//线性伸缩后的维数
+		int StepFactorCurrent = int(stepFactor*stepRatio*FloorLevel);	//线性伸缩后的帧移
+		vector <vector <float> >LSHQueryVectorOneStretch;	//本次线性伸缩后的抽取的LSH点集
+
+		//对线性伸缩后的一维音高序列后抽取LSH点
+		for (int pos=0; pos<sizeTone-stepFactor*(LSHsize+1); pos+=StepFactorCurrent)
 		{
-			LSHVector20Dimention.clear();
-			for (int i=pos;i<pos+stepFactor*20;i+=stepFactor)
+			vector <float> LSHVector20Dimention;	//记录本次抽取的LSH点
+
+			//从pos位置开始抽取一个LSH点
+			for (int i=pos; i<pos+stepFactor*LSHsize; i+=stepFactor)
 			{
 				vector<float> temp;
+
+				//取StepFactor个点的中值加入LSH点
 				for (int k=0;k<stepFactor;k++)
 				{
 					temp.push_back(queryPitchStretch[i+k]);
 				}
 				stable_sort(temp.begin(),temp.end());
 				LSHVector20Dimention.push_back(temp[stepFactor/2]);
-				//LSHVector20Dimention.push_back(queryPitchStretch[i][0]);
 			}
-			MinusMean(LSHVector20Dimention);
-			OneSongPoint++;
-			LSHQueryVectorOneStretch.push_back(LSHVector20Dimention);
+			MinusMean(LSHVector20Dimention);	//减均值
+			OneSongPoint++;		//LSH点计数
+			LSHQueryVectorOneStretch.push_back(LSHVector20Dimention);	//加入LSH点集
 		}
-		LSHQueryVectorLinearStretching.push_back(LSHQueryVectorOneStretch);
+		LSHQueryVectorLinearStretching.push_back(LSHQueryVectorOneStretch);	//本次抽取的LSH点集加入输出数组
 	}
-	QueryPoint20Demention+=OneSongPoint;
+	QueryPoint20Demention += OneSongPoint;	//累计记录LSH点数
 	
 	if (numEntry%100==0 || numEntry >=330)
 	{
 		ofstream outf("wav.result",ofstream::app);
-		outf<<"当前歌总query点数："<<OneSongPoint<<"全部歌曲总query点数:"<<QueryPoint20Demention<<endl;
-		cout<<"当前歌总query点数："<<OneSongPoint<<"全部歌曲总query点数:"<<QueryPoint20Demention<<endl;
+		outf<<"当前歌线性伸缩后的LSH点数："<<OneSongPoint<<" 全部歌曲线性伸缩的LSH点数:"<<QueryPoint20Demention<<endl;
+		cout<<"当前歌线性伸缩后的LSH点数："<<OneSongPoint<<" 全部歌曲线性伸缩的LSH点数:"<<QueryPoint20Demention<<endl;
 		outf.close();
 	}
 	
@@ -1743,33 +1660,37 @@ int LSHresult(char *wavename,int sizeQuery,int stepFactor,float stretch,vector<v
 	outf.close();
 	return 0;
 }
-
+//wavename，输入的wav文件名
 int LSHFilter(char *wavename,map<string ,int> &LSHFilterMap,vector<IntT> &CandidatesFilter,
 			  map<unsigned long , pair<string,short>> &IndexLSH)
 {
-	string   songNameFive;
+	string   songNameFive;//前五首歌曲
 	int SizePoints=CandidatesFilter.size();
 	static int LSHresultMatch[500]={0};
 	static int songNum=0;
 	songNum++;
 	ofstream outf("LSH.result",ofstream::app);//识别结果保存文件
 	int currentNum=0;
-	for (int i=0;i<SizePoints;i++)
+	for (int i=0;i<SizePoints;i++)//遍历所有候选
 	{
-		if (IndexLSH.count(CandidatesFilter[i]))
+		if (IndexLSH.count(CandidatesFilter[i]))//查看索引中是否有候选序号
 		{
-			songNameFive=IndexLSH.find(CandidatesFilter[i])->second.first;
-			songNameFive.erase(0,6);
-			int posSong=songNameFive.rfind("pv");
-			songNameFive.erase(posSong-1,3);
-			string nameSong(wavename);
-
+			songNameFive=IndexLSH.find(CandidatesFilter[i])->second.first;//得到候选序号对应的带路径的歌曲名
+			songNameFive.erase(0,6);//删除前六个字符，为歌曲路径，剩余为歌曲名
+			int posSong=songNameFive.rfind("pv");//从后往前寻找pv字符
+			songNameFive.erase(posSong-1,3);//删除posSong后的三个字符，即.pv，剩余完全的歌曲名
+			outf<<songNameFive<<endl;
+			string nameSong(wavename);//待查询文件名，含路径
+			
+			outf<<nameSong<<endl;
 			string::size_type beginiter=0;
 			string::size_type enditer=0;
-			enditer=nameSong.rfind(".wav");
+			enditer=nameSong.rfind(".wav");//从后往前寻找“.wav”，返回索引位置
 			string nameSongResult;
-			nameSongResult.assign(nameSong,enditer-4,4);
-			if (nameSongResult== songNameFive )
+			nameSongResult.assign(nameSong,enditer-4,4);//将nameSong的的“.wav”的前四个字符赋值给nameSongResult
+			
+			outf<<nameSongResult<<endl;
+			if (nameSongResult== songNameFive )//若候选结果与查找命名相同，这样匹配没有意义呀！！！
 			{
 				currentNum++;
 			}
@@ -1806,8 +1727,8 @@ int LSHFilter(char *wavename,map<string ,int> &LSHFilterMap,vector<IntT> &Candid
 	{
 		if (IndexLSH.count(CandidatesFilter[i]))
 		{
-			songNameFive=IndexLSH.find(CandidatesFilter[i])->second.first;
-			if (LSHFilterMap.count(songNameFive))
+			songNameFive=IndexLSH.find(CandidatesFilter[i])->second.first;//得到候选序号对应的歌曲名
+			if (LSHFilterMap.count(songNameFive))//对候选歌曲名计数，<候选歌曲名，对应候选次数>
 			{
 				LSHFilterMap[songNameFive]++;
 			}

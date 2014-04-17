@@ -9,11 +9,11 @@ void songread(string IDAndNameFile, map <string ,string> &songIDAndName)
 	string line;
 	while (getline(file,line))
 	{
-		int pos = line.find_first_of(' ');
-		if(pos != string::npos)
+		int pos = line.find_first_of(' ');//返回第一个匹配空格的位置
+		if(pos != string::npos)//说明匹配成功
 		{
 			string name(line,0,pos);
-			line.erase(0,pos+1);
+			line.erase(0,pos+1);//删除歌曲ID 剩下歌名映射表
 			songIDAndName.insert(make_pair(name,line));
 		}
 	}

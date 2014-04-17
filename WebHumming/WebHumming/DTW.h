@@ -23,6 +23,8 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <conio.h>
+#include "LSHVectorToFile.h"
+#include "LSHCandidateCorrect.h"
 #define MyMinTwo(x,y) ((x)<(y)?(x):(y))
 using namespace std;
 
@@ -93,7 +95,7 @@ float StringMatchToDisMapRALSHNewPairVariancePositionVariance(vector< vector<flo
 float LinearToDis( vector<float>  &queryX,  vector<float>  &dataY);//线性伸缩算法
 double StringMatchToDisQueryConst(vector< vector<double> > &queryX, vector< vector<double> > &dataY,int recurse);
 double StringMatchToDis(vector< vector<double> > &queryX, vector< vector<double> > &dataY);//线性伸缩求距离
-void StringToString( vector<float>  &queryX,  vector<float>  &dataY,float stretch);//询问基频vector伸缩到另一个vector
+void StringToString( vector<float>  &queryX,  vector<float>  &dataY,float stretch);	//线性伸缩
 double DTWBeginQueryAndSongSevenNo(vector< vector<double> > &queryX, vector< vector<double> > &dataY,vector< vector<double> > &D);//音符上下波动求，7个DTW，不用递归
 int realPitchToTone(vector <double> &queryPitch);//频率到音符
 int WavToResultFive(char *wavename,map<string , vector<vector<double>>> &indexSongName );
