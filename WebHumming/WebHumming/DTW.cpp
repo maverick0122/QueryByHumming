@@ -2604,7 +2604,23 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 	vector <float > tempDis1;
 	vector <float > tempDis2;
 	vector <float > tempDis3;
-	ofstream samePointStream("samePoint.txt",ofstream::app);	//追加打开文件  测试2778,2779,2804
+
+	bool isPrintLSHQueryVectorLS = 0;
+
+	//查询信息文件，因为这个三个文件为追加打开，重写前需删除
+	string query_vector_fname = "QueryLSHLSVector.txt";
+	string query_index_fname = "QueryLSHLSIndex.txt";
+	string query_counter_fname = "QueryLSHLSCounter.txt";
+	/*
+	string cmd1 = "del "+query_vector_fname;
+	string cmd2 = "del "+query_index_fname;
+	string cmd3 = "del "+query_counter_fname;
+	system(cmd1.c_str());
+	system(cmd2.c_str());
+	system(cmd3.c_str());
+	*/
+
+
 	for (int recur=0;recur<3;recur++)
 	{
 		if (recur==0)
@@ -2625,7 +2641,9 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 
 		if (recur==0)
 		{
+
 			//设置LS参数 没有伸缩
+
 			FloorLevelInitial = 1;
 			FloorLevel = FloorLevelInitial;
 			StretchStep = 0.1;
@@ -2636,15 +2654,19 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 			//noteMinFrame，音符最短持续帧数，不足则去除
 			//noteMaxFrame，音符最长持续帧数，超过则切分
 			//NLSHsize,NLSH点维数
+
 			//输出：posPairvector，记录LSH点的起始位置和抽取LSH点音符长度
 			//LSHQueryVectorLinearStretchingNote，记录NLSH点，三维的
+
 			QueryPitchToLSHVectorLinearStretchingShortToMoreNoteFirst(posPair,queryPitchNote,
 				LSHQueryVectorLinearStretchingNote,
 				param[1].noteMinFrame,param[1].noteMaxFrame,param[1].LSHsize);
 		}
 		else if (recur==1)
 		{
+
 			//设置LS参数 从0.8到1.4 步长为0.2 进行4次伸缩
+
 			FloorLevelInitial=0.8;
 			FloorLevel=FloorLevelInitial;
 			StretchStep=0.2;
@@ -2652,7 +2674,9 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 		}
 		else if (recur==2)
 		{
+
 			//设置LS参数 进行12次伸缩
+
 			FloorLevelInitial=0.6;
 			FloorLevel=FloorLevelInitial;
 			StretchStep=0.1;
@@ -2660,7 +2684,9 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 
 			//改变音符最长帧，再抽取NLSH点（没有做LS）
 			for(int recur_t=0; recur_t<1; recur_t++)
+
 			{//循环一次
+
 				int noteMaxFrame_t;
 				if (recur_t==0)
 				{
@@ -2674,10 +2700,12 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 				//抽取一维音高序列的NLSH点
 				//输入：queryPitch，查询的一维音符序列
 				//noteMinFrame，音符最短持续帧数，不足则去除
+
 				//noteMaxFrame，音符最长持续帧数，超过则切分 noteMaxFrame_t=12
 				//NLSHsize,NLSH点维数
 				//输出：posPairvector，记录LSH点的起始位置和持续长度
 				//LSHQueryVectorLinearStretching，记录LSH点
+
 				QueryPitchToLSHVectorLinearStretchingShortToMoreNoteFirst(posPair,queryPitchNote,
 					LSHQueryVectorLinearStretchingNote,
 					param[1].noteMinFrame,noteMaxFrame_t,param[1].LSHsize);
@@ -2692,12 +2720,28 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 		QueryPitchToLSHVectorLinearStretchingShortToMore(queryPitch,LSHQueryVectorLinearStretching, 
 			FloorLevel, UpperLimit,stepFactor,stepRatio, StretchStep,recur,param[0].LSHsize);
 		
+		if(!isPrintLSHQueryVectorLS)
+		{
+			//将LS后的LSH点写入文件
+			//输入：LSHVectorLS，LS后的LSH点，每个点为一个音高序列，vector[i][j][k]表示第i个伸缩因子下的第j个采样点的第k个数据
+			//filename，输出文件路径
+			LSHVectorLSToFile(LSHQueryVectorLinearStretching,query_vector_fname);
+			//将LS后的LSH索引写入文件
+			//输入：LSHVectorLS，LS后的LSH点，每个点为一个音高序列，vector[i][j][k]表示第i个伸缩因子下的第j个采样点的第k个数据
+			//filename，输出文件路径，输出文件中，每行为上述LSH点对应的索引（目前使用LSH点所属的文件名）
+			//后一个输出文件用于统计每个查询文件的数据数
+			IndexLSHLSToFile(LSHQueryVectorLinearStretching,wavename,query_index_fname,query_counter_fname);
+			cout<<"打印 "<<wavename<<" 的QueryLSHLS 数据和索引 完毕"<<endl;
+			isPrintLSHQueryVectorLS = 1;
+		}
+
 		//取消音符的LSH需要修改三个地方
 		int LinearCoe = 0;
 		int LinearCoeTotal = LSHQueryVectorLinearStretching.size();	//线性伸缩的LSH点集数目
-		vector<vector<IntT>> IndexCandidatesStretch;//候选点序号
-		vector<vector<float>> IndexCandidatesDis;//候选点距离
-		vector<vector<IntT>> CandidatesNumStretch;//每个LSH的的候选数
+		vector<vector<IntT>> IndexCandidatesStretch;
+		vector<vector<float>> IndexCandidatesDis;
+		vector<vector<IntT>> CandidatesNumStretch;
+
 		vector<IntT> CandidatesFilter;
 		firstTime=clock();
 		map<int,vector<int>> :: iterator samePointIte;
@@ -2719,13 +2763,13 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 #if 1
 			LinearCoe=0;
 			PPointT *QueriesArray=NULL;	//NLSH点集
-			
 
 			if (LSHQueryVectorLinearStretchingNote[LinearCoe].size()>0)	//若当前的NLSH点集不为空
 			{
 				//从LSH向量索引中读数据集，读入PPointT*中，读入每个LSH点时记录序号和LSH点的平方和
 				//输入：LSHVector：LSH点集
 				QueriesArray = readDataSetFromVector(LSHQueryVectorLinearStretchingNote[LinearCoe]);	//得到当前NLSH点集
+
 				Int32T nPointsQuery = LSHQueryVectorLinearStretchingNote[LinearCoe].size();	//当前NLSH点集大小
 
 				IntT dimension = 6;	//NLSH点维数
@@ -2741,6 +2785,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 				IndexArray = (IntT *)MALLOC(IndexArraySize *sizeof(IntT));
 				double *IndexArrayDis = (double *)MALLOC(IndexArraySize *sizeof(double));
 				IntT *IndexFilterArray = NULL;
+
 				IndexFilterArray = (IntT *)MALLOC(IndexArraySize/2 *sizeof(IntT));//这是什么？
 				IntT * NumArray = (IntT *)MALLOC(nPointsQuery *sizeof(IntT));	//每个点返回的数目
 
@@ -3626,7 +3671,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 			totalLSHthreeTime+=OneSonglshPitchTime;
 		}
 	}//for的recur循环结束
-	samePointStream.close();
+	
 	if(NULL!=NoteEmd){
 		free (NoteEmd);
 		NoteEmd=NULL;
@@ -3799,6 +3844,15 @@ int indexRead(ParamInfo *param,	map <string ,string> &songIDAndName)
 	//filename，输出文件路径，后一个输出文件用于统计每个索引文件的数据数
 	IndexLSHToFile(param[0].IndexLSH,"LSHIndex.txt","LSHCounter.txt");
 
+	//将LSH点写入文件
+	//输入：LSHVector，LSH点，每个点为一个音高序列
+	//filename，输出文件路径
+	LSHVectorToFile(LSHVector,"LSHVector.txt");
+	//将LSH索引写入文件
+	//输入：IndexLSH，LSH索引，记录在LSHVector的序号，带路径的文件名，起始位置
+	//filename，输出文件路径，后一个输出文件用于统计每个索引文件的数据数
+	IndexLSHToFile(param[0].IndexLSH,"LSHIndex.txt","LSHCounter.txt");
+
 	//从LSH向量索引中读数据集，读入dataSet中，读入每个LSH点时记录序号和LSH点的平方和
 	dataSet = readDataSetFromVector(LSHVector);
 
@@ -3836,6 +3890,15 @@ int indexRead(ParamInfo *param,	map <string ,string> &songIDAndName)
 	IndexPitchToLSHVectorNote(param[0].indexSongName, noteMaxFrame, NLSHsize, maxFrame, 
 		LSHVector, param[1].IndexLSHNote);
 		
+	//将LSH点写入文件
+	//输入：LSHVector，LSH点，每个点为一个音高序列
+	//filename，输出文件路径
+	LSHVectorToFile(LSHVector,"NLSHVector.txt");
+	//将NLSH索引写入文件
+	//输入：IndexLSH，NLSH索引，记录在LSHVector的序号，带路径的文件名，起始位置，持续帧数
+	//filename，输出文件路径，后一个输出文件用于统计每个索引文件的数据数
+	IndexLSHNoteToFile(param[1].IndexLSHNote,"NLSHIndex.txt","NLSHCounter.txt");
+
 	//将LSH点写入文件
 	//输入：LSHVector，LSH点，每个点为一个音高序列
 	//filename，输出文件路径

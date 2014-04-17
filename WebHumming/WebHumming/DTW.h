@@ -24,7 +24,9 @@
 #include <stdlib.h>
 #include <conio.h>
 #include "LSHVectorToFile.h"
+
 #include "LSHCandidateCorrect.h"
+
 #define MyMinTwo(x,y) ((x)<(y)?(x):(y))
 using namespace std;
 
