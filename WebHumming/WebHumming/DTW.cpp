@@ -2620,7 +2620,9 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 	system(cmd3.c_str());
 	*/
 
-
+	vector<int> allStretchCandidates;//记录伸缩后的所有候选点
+	vector<int> allCorrectCan;//记录所有正确候选
+	ofstream filename("LSHCandidateCorrect.txt",ofstream::app);
 	for (int recur=0;recur<3;recur++)
 	{
 		if (recur==0)
@@ -2638,6 +2640,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 		vector <vector<vector<float>>> LSHQueryVectorLinearStretching;	//记录不同伸缩因子下抽取的LSH点集
 		vector <vector<vector<float>>> LSHQueryVectorLinearStretchingNote;	//记录不同最长帧下抽取的NLSH点集
 		vector<pair<short, short>> posPair;	//记录NLSH点的起始位置和持续帧数
+		
 
 		if (recur==0)
 		{
@@ -3213,6 +3216,9 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 			int LSHSizeDefine;
 			LSHSizeDefine=LSHQueryVectorLinearStretching.size();
 			//samePointStream<<LSHSizeDefine<<endl;	//输出候选点
+			
+			
+			
 			for (;FloorLevel<UpperLimit+StretchStep && LinearCoe< LinearCoeTotal;FloorLevel+=StretchStep)
 			{//遍历不同伸缩因子伸缩后的LSH点集 当recur=0时 只循环一次
 				PPointT *QueriesArray=NULL;//要free
@@ -3309,8 +3315,9 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 						CandidatesNum.push_back(NumArray[i]);//每个点保留的候选数目
 					}
 					//准确率统计
-					LSHCandidateCorrect(wavename,IndexLSH,IndexCandidates,CandidatesNum);
 
+					LSHCandidateCorrect(wavename,IndexLSH,IndexCandidates,CandidatesNum,allStretchCandidates,allCorrectCan);
+				
 					IndexCandidatesStretch.push_back(IndexCandidates);//存入当前点集的所有候选序号
 					CandidatesNumStretch.push_back(CandidatesNum);//每个点保留的候选数目
 					IndexCandidatesDis.push_back(DisCandidates);//存入候选对应的距离
@@ -3338,10 +3345,11 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 				}
 				LinearCoe++;
 
-			}//遍历不同伸缩因子伸缩后的LSH点集 结束 得到候选点集
+			}//遍历不同伸缩因子伸缩后的LSH点集 结束 得到候选点集  统计正确候选比率
+			
+			
+					
 
-			
-			
 			
 			
 #endif
@@ -3671,6 +3679,41 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 			totalLSHthreeTime+=OneSonglshPitchTime;
 		}
 	}//for的recur循环结束
+	vector<IntT>::iterator allStrCanBen;
+	vector<IntT>::iterator allStrCanEnd;
+	vector<IntT>::iterator allCorCanBen;
+	vector<IntT>::iterator allCorCanEnd;
+	allStrCanBen=allStretchCandidates.begin();
+	allStrCanEnd=allStretchCandidates.end ();
+	allCorCanBen=allCorrectCan.begin();
+	allCorCanEnd=allCorrectCan.end();
+
+	//正确率统计				
+	int sumNum=0;
+	int sumCorNum=0;
+	float corCanRate=0;
+	for(;allStrCanBen!=allStrCanEnd;++allStrCanBen)
+	{
+		
+		sumNum+=*allStrCanBen;
+	}
+	for(;allCorCanBen!=allCorCanEnd;++allCorCanBen)
+	{
+		
+		sumCorNum+=*allCorCanBen;
+	}
+
+	filename<<"所有候选："<<sumNum<<endl;
+	filename<<"所有正确候选："<<sumCorNum<<endl;
+	if(sumNum>0)
+	{
+		corCanRate=(float)sumCorNum/sumNum;
+	}
+	else
+		corCanRate=0;
+	filename<<"总正确率："<<corCanRate<<endl;
+	filename.close();
+
 	
 	if(NULL!=NoteEmd){
 		free (NoteEmd);
