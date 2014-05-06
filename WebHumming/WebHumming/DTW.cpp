@@ -2,6 +2,13 @@
 #include "emd.h"
 #include "lib.h"
 
+//DBN查询结果文件，每行一个查询结果，为候选序号和对应距离，按距离从小到大排序
+ifstream queryResultFile;
+//查询信息文件，因为这个三个文件为追加打开，重写前需删除
+string query_vector_fname = "QueryLSHLSVector.txt";
+string query_index_fname = "QueryLSHLSIndex.txt";
+string query_counter_fname = "QueryLSHLSCounter.txt";
+
 const int inf=100000;
 const int Dpenalty=0.0;
 const int emdLength=23000; //匹配5.5秒长度的EMD，哼唱音高序列的帧数上限
@@ -2434,9 +2441,11 @@ void FloatCopyToVector(vector <float> &des, float *src, int len)
 
 
 //查询函数：
-//输入：wavename,查询文件路径，param,参数信息
+//输入：wavename,查询文件路径，param,参数信息，
+//isWriteLSHQueryToFile,是否将LS后的LSH查询数据及索引写入文件
+//isUseDBNResult，是否用DBN查询结果
 //输出：songFive，查询结果
-int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
+int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive, bool isWriteLSHQueryToFile, bool isUseDBNResult)
 {
 	string wavOut("wavPitch.txt");	//存放wav音高序列结果的文件
 	ofstream wavPitch(wavOut.c_str(),ofstream::app);
@@ -2607,20 +2616,6 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 
 	bool isPrintLSHQueryVectorLS = 0;
 
-	//查询信息文件，因为这个三个文件为追加打开，重写前需删除
-	string query_vector_fname = "QueryLSHLSVector.txt";
-	string query_index_fname = "QueryLSHLSIndex.txt";
-	string query_counter_fname = "QueryLSHLSCounter.txt";
-	/*
-	string cmd1 = "del "+query_vector_fname;
-	string cmd2 = "del "+query_index_fname;
-	string cmd3 = "del "+query_counter_fname;
-	system(cmd1.c_str());
-	system(cmd2.c_str());
-	system(cmd3.c_str());
-	*/
-
-
 	for (int recur=0;recur<3;recur++)
 	{
 		if (recur==0)
@@ -2722,16 +2717,19 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 		
 		if(!isPrintLSHQueryVectorLS)
 		{
-			//将LS后的LSH点写入文件
-			//输入：LSHVectorLS，LS后的LSH点，每个点为一个音高序列，vector[i][j][k]表示第i个伸缩因子下的第j个采样点的第k个数据
-			//filename，输出文件路径
-			LSHVectorLSToFile(LSHQueryVectorLinearStretching,query_vector_fname);
-			//将LS后的LSH索引写入文件
-			//输入：LSHVectorLS，LS后的LSH点，每个点为一个音高序列，vector[i][j][k]表示第i个伸缩因子下的第j个采样点的第k个数据
-			//filename，输出文件路径，输出文件中，每行为上述LSH点对应的索引（目前使用LSH点所属的文件名）
-			//后一个输出文件用于统计每个查询文件的数据数
-			IndexLSHLSToFile(LSHQueryVectorLinearStretching,wavename,query_index_fname,query_counter_fname);
-			cout<<"打印 "<<wavename<<" 的QueryLSHLS 数据和索引 完毕"<<endl;
+			if(isWriteLSHQueryToFile)
+			{
+				//将LS后的LSH点写入文件
+				//输入：LSHVectorLS，LS后的LSH点，每个点为一个音高序列，vector[i][j][k]表示第i个伸缩因子下的第j个采样点的第k个数据
+				//filename，输出文件路径
+				LSHVectorLSToFile(LSHQueryVectorLinearStretching,query_vector_fname);
+				//将LS后的LSH索引写入文件
+				//输入：LSHVectorLS，LS后的LSH点，每个点为一个音高序列，vector[i][j][k]表示第i个伸缩因子下的第j个采样点的第k个数据
+				//filename，输出文件路径，输出文件中，每行为上述LSH点对应的索引（目前使用LSH点所属的文件名）
+				//后一个输出文件用于统计每个查询文件的数据数
+				IndexLSHLSToFile(LSHQueryVectorLinearStretching,wavename,query_index_fname,query_counter_fname);
+				cout<<"打印 "<<wavename<<" 的QueryLSHLS 数据和索引 完毕"<<endl;
+			}
 			isPrintLSHQueryVectorLS = 1;
 		}
 
@@ -2761,136 +2759,138 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 		{//循环不是1
 			//下面为音符的LSH搜索
 #if 1
-			LinearCoe=0;
-			PPointT *QueriesArray=NULL;	//NLSH点集
-
-			if (LSHQueryVectorLinearStretchingNote[LinearCoe].size()>0)	//若当前的NLSH点集不为空
+			if(!isUseDBNResult)
 			{
-				//从LSH向量索引中读数据集，读入PPointT*中，读入每个LSH点时记录序号和LSH点的平方和
-				//输入：LSHVector：LSH点集
-				QueriesArray = readDataSetFromVector(LSHQueryVectorLinearStretchingNote[LinearCoe]);	//得到当前NLSH点集
+				LinearCoe=0;
+				PPointT *QueriesArray=NULL;	//NLSH点集
 
-				Int32T nPointsQuery = LSHQueryVectorLinearStretchingNote[LinearCoe].size();	//当前NLSH点集大小
-
-				IntT dimension = 6;	//NLSH点维数
-				if (nPointsQuery>0)
+				if (LSHQueryVectorLinearStretchingNote[LinearCoe].size()>0)	//若当前的NLSH点集不为空
 				{
-					dimension = LSHQueryVectorLinearStretchingNote[LinearCoe][0].size();	//NLSH点真实维数
-				}
+					//从LSH向量索引中读数据集，读入PPointT*中，读入每个LSH点时记录序号和LSH点的平方和
+					//输入：LSHVector：LSH点集
+					QueriesArray = readDataSetFromVector(LSHQueryVectorLinearStretchingNote[LinearCoe]);	//得到当前NLSH点集
 
-				IntT LSHFilterReturnNum = 0;
-				IntT *IndexArray = NULL;
-				int IndexArraySize = 1000000;	//最大查找候选数目
+					Int32T nPointsQuery = LSHQueryVectorLinearStretchingNote[LinearCoe].size();	//当前NLSH点集大小
 
-				IndexArray = (IntT *)MALLOC(IndexArraySize *sizeof(IntT));
-				double *IndexArrayDis = (double *)MALLOC(IndexArraySize *sizeof(double));
-				IntT *IndexFilterArray = NULL;
-
-				IndexFilterArray = (IntT *)MALLOC(IndexArraySize/2 *sizeof(IntT));//这是什么？
-				IntT * NumArray = (IntT *)MALLOC(nPointsQuery *sizeof(IntT));	//每个点返回的数目
-
-				//得到NLSH结果，即对每个LSH点进行RNN查询，返回RetainNumNote个候选，最后返回所有点的候选数目
-				//输入：QueriesArray,当前NLSH点集，nPointsQuery，当前点集大小
-				//IndexArraySize，最大查找候选数
-				//IndexHumingNote，NLSH点的RNN索引，RetainNum，NLSH每个点仅保留的点数
-				//dimension，NLSH点维数，LSHFilterNum，NLSH滤波保留的点数
-				//输出：
-				//IndexArray，候选序号，NumArray，每个点返回的保留数目，IndexArrayDis，所有候选RA距离
-				//IndexFilterArray，所有候选序号，sizeFilter，
-				IntT ResultSize = LSHStructToResultOnePointRetainSeveral(QueriesArray,nPointsQuery,IndexArraySize, 
-					IndexArray,IndexHumingNote,NumArray,RetainNumNote , dimension,LSHFilterNumNote,IndexFilterArray,
-					LSHFilterReturnNum,IndexArrayDis);
-				
-				vector<IntT> IndexCandidates;
-				vector <float> DisCandidates;
-				vector<IntT> CandidatesNum;	//每个点返回的数目存入Vector
-				int curreIndex=0;
-				//返回的每个点的所有候选序号均存入到CandidatesFilter中
-				for (int i=0;i<LSHFilterReturnNum;i++)
-				{
-					CandidatesFilter.push_back(IndexFilterArray[i]);
-				}
-
-				bool insertY=false;
-				for (int i=0;i<nPointsQuery;i++)
-				{//遍历当前NLSH点集
-					int numS=0;
-					int siz=NumArray[i];//每个LSH点返回的候选点数
-					for (int j=0;j<siz;j++)
+					IntT dimension = 6;	//NLSH点维数
+					if (nPointsQuery>0)
 					{
-						if (samePoint.count(IndexArray[j+curreIndex]))//查看候选序号存在，返回0或1，测试结果显示，samepoint没有数值，基本无用
-						{
-							numS=0;
-
-							samePointIte=samePoint.find(IndexArray[j+curreIndex]);//得到候选序号对应的候选点的迭代器或指针
-							numS=samePointIte->second.size();//候选点的大小
-							IndexCandidates.push_back(IndexArray[j+curreIndex]);//存入候选序号
-							DisCandidates.push_back(IndexArrayDis[j+curreIndex]);//存入候选点的距离
-							for (int k=0;k<samePointIte->second.size();k++)
-							{//去除部分候选点  规则？？
-								insertY=true;
-								for (int l=0;l<siz;l++)
-								{
-									if (samePointIte->second[k]==IndexArray[l+curreIndex])
-									{
-										insertY=false;
-									}
-								}
-								if (insertY==true)
-								{
-									IndexCandidates.push_back(samePointIte->second[k]);
-									DisCandidates.push_back(IndexArrayDis[j+curreIndex]);
-								}
-								else
-									numS--;
-
-							}
-							NumArray[i]+=numS;
-							
-						}
-						
-						else//查看候选序号不存在，存入候选序号及距离
-						{
-							IndexCandidates.push_back(IndexArray[j+curreIndex]);
-							DisCandidates.push_back(IndexArrayDis[j+curreIndex]);
-							
-						}
-
+						dimension = LSHQueryVectorLinearStretchingNote[LinearCoe][0].size();	//NLSH点真实维数
 					}
 
-					curreIndex+=siz;//进行下一个点
-					CandidatesNum.push_back(NumArray[i]);//存入当前LSH点候选点数
+					IntT LSHFilterReturnNum = 0;
+					IntT *IndexArray = NULL;
+					int IndexArraySize = 1000000;	//最大查找候选数目
+
+					IndexArray = (IntT *)MALLOC(IndexArraySize *sizeof(IntT));
+					double *IndexArrayDis = (double *)MALLOC(IndexArraySize *sizeof(double));
+					IntT *IndexFilterArray = NULL;
+
+					IndexFilterArray = (IntT *)MALLOC(IndexArraySize/2 *sizeof(IntT));//这是什么？
+					IntT * NumArray = (IntT *)MALLOC(nPointsQuery *sizeof(IntT));	//每个点返回的数目
+
+					//得到NLSH结果，即对每个LSH点进行RNN查询，返回RetainNumNote个候选，最后返回所有点的候选数目
+					//输入：QueriesArray,当前NLSH点集，nPointsQuery，当前点集大小
+					//IndexArraySize，最大查找候选数
+					//IndexHumingNote，NLSH点的RNN索引，RetainNum，NLSH每个点仅保留的点数
+					//dimension，NLSH点维数，LSHFilterNum，NLSH滤波保留的点数
+					//输出：
+					//IndexArray，候选序号，NumArray，每个点返回的保留数目，IndexArrayDis，所有候选RA距离
+					//IndexFilterArray，所有候选序号，sizeFilter，
+					IntT ResultSize = LSHStructToResultOnePointRetainSeveral(QueriesArray,nPointsQuery,IndexArraySize, 
+						IndexArray,IndexHumingNote,NumArray,RetainNumNote , dimension,LSHFilterNumNote,IndexFilterArray,
+						LSHFilterReturnNum,IndexArrayDis);
+				
+					vector<IntT> IndexCandidates;
+					vector <float> DisCandidates;
+					vector<IntT> CandidatesNum;	//每个点返回的数目存入Vector
+					int curreIndex=0;
+					//返回的每个点的所有候选序号均存入到CandidatesFilter中
+					for (int i=0;i<LSHFilterReturnNum;i++)
+					{
+						CandidatesFilter.push_back(IndexFilterArray[i]);
+					}
+
+					bool insertY=false;
+					for (int i=0;i<nPointsQuery;i++)
+					{//遍历当前NLSH点集
+						int numS=0;
+						int siz=NumArray[i];//每个LSH点返回的候选点数
+						for (int j=0;j<siz;j++)
+						{
+							if (samePoint.count(IndexArray[j+curreIndex]))//查看候选序号存在，返回0或1，测试结果显示，samepoint没有数值，基本无用
+							{
+								numS=0;
+
+								samePointIte=samePoint.find(IndexArray[j+curreIndex]);//得到候选序号对应的候选点的迭代器或指针
+								numS=samePointIte->second.size();//候选点的大小
+								IndexCandidates.push_back(IndexArray[j+curreIndex]);//存入候选序号
+								DisCandidates.push_back(IndexArrayDis[j+curreIndex]);//存入候选点的距离
+								for (int k=0;k<samePointIte->second.size();k++)
+								{//去除部分候选点  规则？？
+									insertY=true;
+									for (int l=0;l<siz;l++)
+									{
+										if (samePointIte->second[k]==IndexArray[l+curreIndex])
+										{
+											insertY=false;
+										}
+									}
+									if (insertY==true)
+									{
+										IndexCandidates.push_back(samePointIte->second[k]);
+										DisCandidates.push_back(IndexArrayDis[j+curreIndex]);
+									}
+									else
+										numS--;
+
+								}
+								NumArray[i]+=numS;
+							
+							}
+						
+							else//查看候选序号不存在，存入候选序号及距离
+							{
+								IndexCandidates.push_back(IndexArray[j+curreIndex]);
+								DisCandidates.push_back(IndexArrayDis[j+curreIndex]);
+							
+							}
+
+						}
+
+						curreIndex+=siz;//进行下一个点
+						CandidatesNum.push_back(NumArray[i]);//存入当前LSH点候选点数
+					}
+					IndexCandidatesStretch.push_back(IndexCandidates);//存入点集的候选点序号
+					CandidatesNumStretch.push_back(CandidatesNum);//存入此次LSH点候选点数
+					IndexCandidatesDis.push_back(DisCandidates);
+					for (int i=0;i<nPointsQuery;i++)//释放空间
+					{
+						free(QueriesArray[i]->coordinates);
+						free(QueriesArray[i]);
+					}
+					free(IndexArray);
+					free(IndexFilterArray);
+					free(NumArray);
+					free(QueriesArray);
+					free(IndexArrayDis);
 				}
-				IndexCandidatesStretch.push_back(IndexCandidates);//存入点集的候选点序号
-				CandidatesNumStretch.push_back(CandidatesNum);//存入此次LSH点候选点数
-				IndexCandidatesDis.push_back(DisCandidates);
-				for (int i=0;i<nPointsQuery;i++)//释放空间
+				else//若当前的NLSH点集为空
 				{
-					free(QueriesArray[i]->coordinates);
-					free(QueriesArray[i]);
+					vector <float> DisCandidates;
+					vector<IntT> IndexCandidates;
+					vector<IntT> CandidatesNum;//每个点返回的数目存入Vector
+					IndexCandidatesStretch.push_back(IndexCandidates);//存入候选点序号
+					CandidatesNumStretch.push_back(CandidatesNum);//存入此次LSH点候选点数
+					IndexCandidatesDis.push_back(DisCandidates);
 				}
-				free(IndexArray);
-				free(IndexFilterArray);
-				free(NumArray);
-				free(QueriesArray);
-				free(IndexArrayDis);
-			}
-			else//若当前的NLSH点集为空
-			{
-				vector <float> DisCandidates;
-				vector<IntT> IndexCandidates;
-				vector<IntT> CandidatesNum;//每个点返回的数目存入Vector
-				IndexCandidatesStretch.push_back(IndexCandidates);//存入候选点序号
-				CandidatesNumStretch.push_back(CandidatesNum);//存入此次LSH点候选点数
-				IndexCandidatesDis.push_back(DisCandidates);
-			}
 
-			lastTime=clock();
-			OneSongLSHTime=(double)(lastTime-firstTimeTempLSH1)/CLOCKS_PER_SEC;
-			totalLSHOnlyNoteTime+=OneSongLSHTime;
-			OneSongLSHTime=(double)(lastTime-firstTime)/CLOCKS_PER_SEC;
-			totalLSHTime+=OneSongLSHTime;
-
+				lastTime=clock();
+				OneSongLSHTime=(double)(lastTime-firstTimeTempLSH1)/CLOCKS_PER_SEC;
+				totalLSHOnlyNoteTime+=OneSongLSHTime;
+				OneSongLSHTime=(double)(lastTime-firstTime)/CLOCKS_PER_SEC;
+				totalLSHTime+=OneSongLSHTime;
+			}
 #endif
 
 			//下面为统计LSH准确率
@@ -3212,9 +3212,14 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 			FloorLevel=FloorLevelInitial;//当recur=0时 为1
 			int LSHSizeDefine;
 			LSHSizeDefine=LSHQueryVectorLinearStretching.size();
+
+			int candidateSize;
+			queryResultFile >> candidateSize;	//第一行为每个查询的候选数，即每行列数
+
 			//samePointStream<<LSHSizeDefine<<endl;	//输出候选点
 			for (;FloorLevel<UpperLimit+StretchStep && LinearCoe< LinearCoeTotal;FloorLevel+=StretchStep)
-			{//遍历不同伸缩因子伸缩后的LSH点集 当recur=0时 只循环一次
+			{
+				//遍历不同伸缩因子伸缩后的LSH点集 当recur=0时 只循环一次
 				PPointT *QueriesArray=NULL;//要free
 				
 				if ((recur==1 || recur==2 )&& FloorLevel<=1.01 && FloorLevel>=0.99)
@@ -3225,42 +3230,65 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 				{
 					continue;
 				}
-				if (LSHQueryVectorLinearStretching[LinearCoe].size()>0)//伸缩后得到的点集 存在点集
+
+				//LSHQueryVectorLinearStretching，LS后的LSH点，每个点为一个音高序列，vector[i][j][k]表示第i个伸缩因子下的第j个采样点的第k个数据
+				if (LSHQueryVectorLinearStretching[LinearCoe].size()>0)	//当前伸缩因子下伸缩后得到的点集
 				{
-					QueriesArray=readDataSetFromVector(LSHQueryVectorLinearStretching[LinearCoe]);//读入LSH点集
-					Int32T nPointsQuery=LSHQueryVectorLinearStretching[LinearCoe].size();//得到点集大小
+					QueriesArray=readDataSetFromVector(LSHQueryVectorLinearStretching[LinearCoe]);	//读入LSH点集
+					Int32T nPointsQuery=LSHQueryVectorLinearStretching[LinearCoe].size();	//得到点集大小
 					IntT dimension=20;
 					if (nPointsQuery>0)
 					{
-						dimension=LSHQueryVectorLinearStretching[LinearCoe][0].size();//得到LSH的真实维数
+						dimension=LSHQueryVectorLinearStretching[LinearCoe][0].size();	//得到LSH的真实维数
 					}
 					IntT LSHFilterReturnNum=0;
 					IntT *IndexArray=NULL;
-					int IndexArraySize=100000;//最大查找候选数目
+					int IndexArraySize=500000;//最大查找候选数目
+
 					IndexArray=(IntT *)MALLOC(IndexArraySize *sizeof(IntT));
 					double *IndexArrayDis=(double *)MALLOC(IndexArraySize *sizeof(double));
 					IntT *IndexFilterArray=NULL;
 					IndexFilterArray=(IntT *)MALLOC(IndexArraySize/2 *sizeof(IntT));
 					IntT * NumArray=(IntT *)MALLOC(nPointsQuery *sizeof(IntT));//每个点返回的候选数目
-					//得到LSH结果，即对每个LSH点进行RNN查询，返回RetainNumNote个候选，最后返回所有点的候选数目
-					//输入：QueriesArray,当前LSH点集，nPointsQuery，当前点集大小
-					//IndexArraySize，最大查找候选数
-					//IndexHuming，LSH点的RNN索引，RetainNum，LSH每个点仅保留的点数
-					//dimension，LSH点维数，LSHFilterNum，LSH滤波保留的点数
-					//输出：
-					//IndexArray，候选序号，NumArray，每个点返回的保留数目  IndexArrayDis，所有候选对应的距离
-					//IndexFilterArray，所有候选序号，sizeFilter，候选大小，
-					IntT ResultSize=LSHStructToResultOnePointRetainSeveral(QueriesArray,nPointsQuery,IndexArraySize, 
-						IndexArray,IndexHuming,NumArray,RetainNum , dimension,LSHFilterNum,IndexFilterArray,LSHFilterReturnNum,IndexArrayDis);//得到结果，每个点返回RetainNum个候选
-					
-					
+
+					if(!isUseDBNResult)
+					{
+						//得到LSH结果，即对每个LSH点进行RNN查询，返回RetainNum个候选，最后返回所有点的候选数目
+						//输入：QueriesArray,当前LSH点集，nPointsQuery，当前点集大小
+						//IndexArraySize，最大查找候选数
+						//IndexHuming，LSH点的RNN索引，RetainNum，LSH每个点仅保留的点数
+						//dimension，LSH点维数，LSHFilterNum，LSH滤波保留的点数
+						//输出：
+						//IndexArray，候选序号，NumArray，每个点返回的保留数目  IndexArrayDis，所有候选对应的距离
+						//IndexFilterArray，所有候选序号，sizeFilter，候选大小
+						IntT ResultSize=LSHStructToResultOnePointRetainSeveral(QueriesArray,nPointsQuery,IndexArraySize, 
+							IndexArray,IndexHuming,NumArray,RetainNum,dimension,LSHFilterNum,IndexFilterArray,LSHFilterReturnNum,IndexArrayDis);//得到结果，每个点返回RetainNum个候选
+					}
+					else
+					{
+						if(queryResultFile.eof())	//到文件尾，错误
+						{
+							printf("DBN查询结果文件query_result.txt数据不足！\n");
+							break;
+						}
+						for(int i=0; i<nPointsQuery*candidateSize; i++)	//读入当前查询点集的候选和距离
+						{
+							queryResultFile >> IndexArray[i] >> IndexArrayDis[i];
+						}
+						for(int i=0; i<nPointsQuery; i++)
+						{
+							NumArray[i] = candidateSize;
+						}
+					}
+
 					vector<IntT> IndexCandidates;
 					vector <float> DisCandidates;
 					vector<IntT> CandidatesNum;//每个点返回的数目存入Vector
 					int curreIndex=0;
 					
 					for (int i=0;i<LSHFilterReturnNum;i++)
-					{//返回的每个点的所有候选序号均存入到CandidatesFilter中
+					{
+						//返回的每个点的所有候选序号均存入到CandidatesFilter中
 						CandidatesFilter.push_back(IndexFilterArray[i]);
 					}
 					bool insertY=false;
@@ -3271,7 +3299,8 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 						for (int j=0;j<siz;j++)
 						{
 							if (samePoint.count(IndexArray[j+curreIndex]))
-							{//查看候选序号存在，返回0或1，测试结果显示，samepoint没有数值，基本无用
+							{
+								//查看候选序号存在，返回0或1，测试结果显示，samepoint没有数值，基本无用
 								numS=0;
 
 								samePointIte=samePoint.find(IndexArray[j+curreIndex]);
@@ -3339,11 +3368,6 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 				LinearCoe++;
 
 			}//遍历不同伸缩因子伸缩后的LSH点集 结束 得到候选点集
-
-			
-			
-			
-			
 #endif
 
 			lastTimeTempLSH2=clock();
@@ -4029,43 +4053,59 @@ void main()
 	ofstream resultFile(OutName.c_str());
 
 	string pitchname;	//wav路径
+	queryResultFile.open("query_result.txt");	//打开DBN查询结果文件，每行一个查询结果，为候选序号和对应距离，按距离从小到大排序
+
+	//查询信息文件，因为这个三个文件为追加打开，重写前需删除
+	string cmd1 = "del "+query_vector_fname;
+	string cmd2 = "del "+query_index_fname;
+	string cmd3 = "del "+query_counter_fname;
+	system(cmd1.c_str());
+	system(cmd2.c_str());
+	system(cmd3.c_str());
+
+	double top1Accuracy = 0;	//top1正确率
+	double top5Accuracy = 0;	//top5正确率
+	double wavCount = 0;	//查询wav数
+
 	while(getline(pitchFile,pitchname))	//读取每行的wav路径
 	{
-		resultFile<<pitchname<<endl;
 		char filename[300];		//哼唱wav文件名（含路径）
 		strcpy(filename,pitchname.c_str());
 
 		//查询函数：
 		//输入：filename,查询文件路径，param,参数信息
+		//isWriteLSHQueryToFile,是否将LS后的LSH查询数据及索引写入文件
+		//isUseDBNResult，是否用DBN查询结果
 		//输出：songFive，查询结果
-		resultFile<<filename<<endl;
-		WavToSongFive(filename,param,songFive);
-
-		/*
-		//查询
-		WavToSongFive (filename,	//查询文件路径
-			pci->indexSongName,	//索引pv文件路径和对应的一维音高序列
-			pci->IndexHuming,//IndexHumingLocal,	//LSH点的RNN索引
-			pciNote->IndexHuming,//IndexHumingLocalNote,	//NLSH点的RNN索引
-			pci->IndexLSH,	//LSH索引，记录LSH点的序号，带路径的文件名，起始位置
-			pciNote->IndexLSHNote,	//NLSH索引，记录NLSH点的序号，起始位置，持续帧数
-			pci->stepFactor,	//选择LSH点的间隔数（间隔几个点抽取一个点）
-			pci->RetainNum,		//每个点仅保留的点数
-			pciNote->RetainNum,	//每个点仅保留的点数
-			pci->LSHFilterNum,	//LSH滤波保留的点数
-			pciNote->LSHFilterNum,	//LSH滤波保留的点数
-			pci->stepRatio,	//query的LSH变换帧移
-			songFive);	//查询结果
-		*/
+		WavToSongFive(filename,param,songFive,true,false);
 
 		//输出结果
 		resultFile<<"query:"<<pitchname<<endl;
-		for (int j=0;j<5 && j<=songFive.size();j++)
+
+		//提取哼唱wav文件的文件名
+		int pos = pitchname.find_last_of('\\');
+		string queryPureName = pitchname.substr(pos+1,pitchname.length()-pos-5);	//取最后一个'\'和".wav"之间的文件名
+
+		for (int j=0; j<5 && j<=songFive.size(); j++)
 		{
 			resultFile<<songFive[j]<<endl;
+
+			if(queryPureName == songFive[j])
+			{
+				top5Accuracy++;
+				if(j==0) top1Accuracy++;
+			}
 		}
 		resultFile<<endl;
+
+		wavCount++;
 	}
+	top1Accuracy /= wavCount;
+	top5Accuracy /= wavCount;
+	resultFile << "Top1 正确率：" << top1Accuracy*100 << " %" << endl;
+	resultFile << "Top5 正确率：" << top5Accuracy*100 << " %" << endl;
+	
+	queryResultFile.close();
 	pitchFile.close();	//关闭查询文件流
 	resultFile.close();	//关闭结果文件流
 }
