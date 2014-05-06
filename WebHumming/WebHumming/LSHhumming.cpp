@@ -234,7 +234,7 @@ IntT LSHStructToResultOnePointRetainSeveral(PPointT *sampleQueries,Int32T nPoint
 	IntT IndexLSHFilterNum = 0;
 	IntT sizeR;
 
-	IntT sizeRetain = LSHFilterNum > RetainNum ? LSHFilterNum: RetainNum;	//实际每个点保留点数是RetainNum和LSHFilterNum的最大值
+	IntT sizeRetain = LSHFilterNum > RetainNum ? LSHFilterNum: RetainNum;	//实际每个点保留点数是RetainNum（5）和LSHFilterNum（200）的最大值
 
 
     IntT * RetainIndex = (IntT *)MALLOC(sizeRetain * sizeof(IntT));
@@ -282,7 +282,7 @@ IntT LSHStructToResultOnePointRetainSeveral(PPointT *sampleQueries,Int32T nPoint
 			AllResultToRetainMostNearResult(RetainIndex,sampleQueries[i], sizeResort ,
 				result,dimension,sizeR,RetainDis);//获得各候选点与查询点的距离（由小到大排序后）及对应序号到RetainDis及RetainIndex中
 			for (int j=0;j<RetainNum;j++)
-			{//得到retainNum个距离及序号结果
+			{//得到前retainNum个距离及序号结果
 				if (IndexNum<IndexArraySize)
 				{
 					IndexArray[IndexNum]=RetainIndex[j];
