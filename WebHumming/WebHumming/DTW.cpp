@@ -2623,6 +2623,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 	vector<int> allStretchCandidates;//记录伸缩后的所有候选点
 	vector<int> allCorrectCan;//记录所有正确候选
 	ofstream filename("LSHCandidateCorrect.txt",ofstream::app);
+	static int exitCandidateNum=0;
 	for (int recur=0;recur<3;recur++)
 	{
 		if (recur==0)
@@ -3250,12 +3251,12 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 					IntT * NumArray=(IntT *)MALLOC(nPointsQuery *sizeof(IntT));//每个点返回的候选数目
 					//得到LSH结果，即对每个LSH点进行RNN查询，返回RetainNumNote个候选，最后返回所有点的候选数目
 					//输入：QueriesArray,当前LSH点集，nPointsQuery，当前点集大小
-					//IndexArraySize，最大查找候选数
+					//IndexArraySize，最大查找候选数，就是最多对这些点进行候选查找
 					//IndexHuming，LSH点的RNN索引，RetainNum，LSH每个点仅保留的点数
 					//dimension，LSH点维数，LSHFilterNum，LSH滤波保留的点数
 					//输出：
 					//IndexArray，候选序号，NumArray，每个点返回的保留数目  IndexArrayDis，所有候选对应的距离
-					//IndexFilterArray，所有候选序号，sizeFilter，候选大小，
+					//IndexFilterArray，所有候选序号，sizeFilter，候选大小，后来没有用到
 					IntT ResultSize=LSHStructToResultOnePointRetainSeveral(QueriesArray,nPointsQuery,IndexArraySize, 
 						IndexArray,IndexHuming,NumArray,RetainNum , dimension,LSHFilterNum,IndexFilterArray,LSHFilterReturnNum,IndexArrayDis);//得到结果，每个点返回RetainNum个候选
 					
@@ -3705,13 +3706,15 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive)
 
 	filename<<"所有候选："<<sumNum<<endl;
 	filename<<"所有正确候选："<<sumCorNum<<endl;
-	if(sumNum>0)
+	if(sumNum>0&&sumCorNum>0)
 	{
 		corCanRate=(float)sumCorNum/sumNum;
+		exitCandidateNum++;
 	}
 	else
 		corCanRate=0;
 	filename<<"总正确率："<<corCanRate<<endl;
+	filename<<"存在候选的数目："<<exitCandidateNum<<endl;
 	filename.close();
 
 	
@@ -4072,8 +4075,11 @@ void main()
 	ofstream resultFile(OutName.c_str());
 
 	string pitchname;	//wav路径
+	int wavNum=0;
+	int correctWav=0;
 	while(getline(pitchFile,pitchname))	//读取每行的wav路径
 	{
+		wavNum++;
 		resultFile<<pitchname<<endl;
 		char filename[300];		//哼唱wav文件名（含路径）
 		strcpy(filename,pitchname.c_str());
@@ -4102,13 +4108,23 @@ void main()
 		*/
 
 		//输出结果
+		string wavName;
+		string::size_type wavEnd=0;
+		string::size_type wavStart=0;
+		wavStart=pitchname.rfind("\\");
+		wavEnd=pitchname.rfind(".wav");
+		wavName.assign(pitchname,wavStart+1,wavEnd-wavStart-1);
 		resultFile<<"query:"<<pitchname<<endl;
 		for (int j=0;j<5 && j<=songFive.size();j++)
 		{
 			resultFile<<songFive[j]<<endl;
+			if(songFive[j]==wavName)
+				correctWav++;
 		}
 		resultFile<<endl;
 	}
+	resultFile<<"查询歌曲数："<<wavNum<<endl;
+	resultFile<<"有正确结果的歌曲数："<<correctWav<<endl;
 	pitchFile.close();	//关闭查询文件流
 	resultFile.close();	//关闭结果文件流
 }
