@@ -9,6 +9,14 @@ string query_vector_fname = "QueryLSHLSVector.txt";
 string query_index_fname = "QueryLSHLSIndex.txt";
 string query_counter_fname = "QueryLSHLSCounter.txt";
 
+//统计正确率的所有参数
+static int InFxNum=0;//进入wavToSong函数次数,即查询歌曲总数1
+static double allQueryPoint=0;//所有wav的所有伸缩后的查询点集数2
+static double allQueryPointCorCan=0;//所有wav存在正确候选的所有查询点数3
+static double allQueryPointCan=0;//所有wav的所有候选数4
+static double allQueryPointOnlyCorCan=0;//每首wav候选去重后正确候选之和5
+static double allQueryPointOnlyCan=0;//每首wav候选去重后候选之和6
+
 const int inf=100000;
 const int Dpenalty=0.0;
 const int emdLength=23000; //匹配5.5秒长度的EMD，哼唱音高序列的帧数上限
@@ -2447,6 +2455,8 @@ void FloatCopyToVector(vector <float> &des, float *src, int len)
 //输出：songFive，查询结果
 int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive, bool isWriteLSHQueryToFile, bool isUseDBNResult)
 {
+	
+	InFxNum++;
 	string wavOut("wavPitch.txt");	//存放wav音高序列结果的文件
 	ofstream wavPitch(wavOut.c_str(),ofstream::app);
 
@@ -2620,6 +2630,8 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive, bo
 	vector<int> allCorrectCan;//记录所有正确候选
 	ofstream filename("LSHCandidateCorrect.txt",ofstream::app);
 	static int exitCandidateNum=0;
+	
+	
 
 	for (int recur=0;recur<3;recur++)
 	{
@@ -3223,7 +3235,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive, bo
 			queryResultFile >> candidateSize;	//第一行为每个查询的候选数，即每行列数
 
 			//samePointStream<<LSHSizeDefine<<endl;	//输出候选点
-			
+			set<int> allStrCan;
 			
 			
 			for (;FloorLevel<UpperLimit+StretchStep && LinearCoe< LinearCoeTotal;FloorLevel+=StretchStep)
@@ -3245,6 +3257,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive, bo
 				{
 					QueriesArray=readDataSetFromVector(LSHQueryVectorLinearStretching[LinearCoe]);	//读入LSH点集
 					Int32T nPointsQuery=LSHQueryVectorLinearStretching[LinearCoe].size();	//得到点集大小
+					allQueryPoint+=nPointsQuery;
 					IntT dimension=20;
 					if (nPointsQuery>0)
 					{
@@ -3316,6 +3329,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive, bo
 								numS=samePointIte->second.size();
 								IndexCandidates.push_back(IndexArray[j+curreIndex]);
 								DisCandidates.push_back(IndexArrayDis[j+curreIndex]);
+								allStrCan.insert(IndexArray[j+curreIndex]);//将候选无重复的存入set
 								for (int k=0;k<samePointIte->second.size();k++)
 								{
 									insertY=true;
@@ -3340,6 +3354,7 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive, bo
 							{//查看候选序号不存在，存入候选序号及距离
 								IndexCandidates.push_back(IndexArray[j+curreIndex]);//存入候选序号
 								DisCandidates.push_back(IndexArrayDis[j+curreIndex]);//存入候选对应的距离
+								allStrCan.insert(IndexArray[j+curreIndex]);
 							}
 						}
 
@@ -3348,8 +3363,10 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive, bo
 					}
 					//准确率统计
 
-					LSHCandidateCorrect(wavename,IndexLSH,IndexCandidates,CandidatesNum,allStretchCandidates,allCorrectCan);
-				
+					int candidates=LSHCandidateCorrect(wavename,IndexLSH,IndexCandidates,CandidatesNum,allStretchCandidates,allCorrectCan);
+					allQueryPointCorCan+=candidates;//有正确候选的查询点数之和
+					allQueryPointCan+=IndexCandidates.size ();//所有候选点数
+
 					IndexCandidatesStretch.push_back(IndexCandidates);//存入当前点集的所有候选序号
 					CandidatesNumStretch.push_back(CandidatesNum);//每个点保留的候选数目
 					IndexCandidatesDis.push_back(DisCandidates);//存入候选对应的距离
@@ -3377,8 +3394,33 @@ int WavToSongFive(char *wavename, ParamInfo *param, vector<string>& songFive, bo
 				}
 				LinearCoe++;
 
-			}//遍历不同伸缩因子伸缩后的LSH点集 结束 得到候选点集  统计正确候选比率
-			
+			}//遍历所有伸缩因子候选集 统计去重后正确候选数
+			allQueryPointOnlyCan+=allStrCan.size ();//无重复的候选数
+			set <int>::iterator iterbegin;
+			set <int>::iterator iterend;
+			iterbegin=allStrCan.begin();
+			iterend=allStrCan.end();	
+			string canSong;
+			string wavName(wavename);
+			int pos = wavName.find_last_of('\\');
+			wavName = wavName.substr(pos+1,wavName.length()-pos-5);	//取最后一个'\'和".wav"之间的文件名
+			for(;iterbegin!=iterend;++iterbegin)
+			{
+				int canNum=*iterbegin;
+				if(IndexLSH.count(canNum))
+				{
+					canSong=IndexLSH.find(canNum)->second.first;
+					//filename<<canSong<<endl;
+					canSong.erase(0,6);
+					int pvPos=canSong.rfind("pv");
+					canSong.erase(pvPos-1,3);
+					//filename<<canSong;
+					if(canSong==wavName)
+					{
+						allQueryPointOnlyCorCan++;
+					}
+				}
+			}
 #endif
 
 			lastTimeTempLSH2=clock();
@@ -4152,6 +4194,18 @@ void main()
 	resultFile << "Top1 正确率：" << top1Accuracy*100 << " %" << endl;
 	resultFile << "Top5 正确率：" << top5Accuracy*100 << " %" << endl;
 	
+	resultFile <<"进入wavToSong函数次数:"<< InFxNum <<endl;
+	resultFile <<"所有wav的所有伸缩后的查询点集数: "<< allQueryPoint <<endl;
+	resultFile <<"所有wav存在正确候选的所有查询点数: "<< allQueryPointCorCan <<endl;
+	resultFile <<"候选去重后候选之和: "<< allQueryPointOnlyCan<<endl;
+	resultFile <<"所有wav的所有候选数: "<< allQueryPointCan <<endl;
+	resultFile <<"候选去重后正确候选之和: "<< allQueryPointOnlyCorCan<<endl;
+
+	resultFile <<"含正确候选/查询数: "<< allQueryPointCorCan/allQueryPoint*100 << " %"<<endl;
+	resultFile <<"平均正确候选数: "<< allQueryPointOnlyCorCan/InFxNum<<endl;
+	resultFile <<"平均候选数: "<< allQueryPointOnlyCan/InFxNum<<endl;
+	resultFile <<"每个wav的平均正确候选比例: "<< allQueryPointOnlyCorCan/allQueryPointOnlyCan*100 << " %"  <<endl;
+
 	queryResultFile.close();
 
 	pitchFile.close();	//关闭查询文件流

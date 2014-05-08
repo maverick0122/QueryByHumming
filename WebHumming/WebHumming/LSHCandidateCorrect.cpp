@@ -140,7 +140,7 @@ int LSHCandidateCorrect(char*wavename,map<unsigned long , pair<string,short>> &I
 	filename.close();
 	
 	allCandidate.clear ();
-	return 0;
+	return candidates;
 }
 
 int BALSnLSHCandidateCorrect(char*wavename,vector <string> &SongNameMapToDataY)
